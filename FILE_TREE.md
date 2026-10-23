@@ -1,0 +1,58 @@
+# Common Thread Starter — File Tree
+
+```text
+common-thread-starter/
+├── .github/workflows/backend-tests.yml
+├── .github/workflows/frontend-build.yml
+├── .gitignore
+├── LICENSE
+├── README.md
+├── backend/.env.example
+├── backend/app/__init__.py
+├── backend/app/api/__init__.py
+├── backend/app/api/routes/__init__.py
+├── backend/app/api/routes/health.py
+├── backend/app/api/routes/recommendations.py
+├── backend/app/core/__init__.py
+├── backend/app/core/config.py
+├── backend/app/db/__init__.py
+├── backend/app/db/base.py
+├── backend/app/db/models.py
+├── backend/app/db/session.py
+├── backend/app/domain/__init__.py
+├── backend/app/domain/schemas.py
+├── backend/app/main.py
+├── backend/app/providers/__init__.py
+├── backend/app/providers/composer.py
+├── backend/app/providers/interfaces.py
+├── backend/app/providers/mock_qloo.py
+├── backend/app/providers/qloo.py
+├── backend/app/services/__init__.py
+├── backend/app/services/provenance.py
+├── backend/app/services/ranking.py
+├── backend/app/services/runtime.py
+├── backend/app/workflows/__init__.py
+├── backend/app/workflows/graph.py
+├── backend/app/workflows/nodes.py
+├── backend/app/workflows/state.py
+├── backend/pyproject.toml
+├── backend/tests/test_api.py
+├── backend/tests/test_ranking.py
+├── backend/tests/test_workflow.py
+├── docs/AGENT_WORKFLOW.md
+├── docs/API_CONTRACTS.md
+├── docs/ARCHITECTURE.md
+├── docs/IMPLEMENTATION_PLAN.md
+├── frontend/.env.example
+├── frontend/README.md
+├── frontend/index.html
+├── frontend/package.json
+├── frontend/src/App.tsx
+├── frontend/src/api/client.ts
+├── frontend/src/main.tsx
+├── frontend/src/style.css
+├── frontend/src/types.ts
+├── frontend/tsconfig.json
+├── frontend/vite.config.ts
+├── render.yaml
+```
