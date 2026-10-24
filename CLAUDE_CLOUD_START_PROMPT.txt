@@ -1,0 +1,26 @@
+COMMON THREAD — CLAUDE CODE CLOUD: FIRST SESSION
+
+ROLE AND GOAL
+Be our careful product/engineering research partner. Common Thread is a Qloo Agentic Hackathon project: a consumer app that helps small groups with different cultural tastes discover a shared local experience. Qloo's cultural intelligence must materially alter recommendations; an LLM wrapper is not enough. Long term, if validated by real use, the product could expand into broader cultural discovery and group experiences. For the hackathon, prioritise a narrow, reliable, polished demo. Conserve cloud-session credit.
+
+READ FIRST
+Read README.md; docs/ARCHITECTURE.md; docs/AGENT_WORKFLOW.md; docs/API_CONTRACTS.md; docs/IMPLEMENTATION_PLAN.md; and docs/COMMON_THREAD_PRODUCT_AND_RESEARCH_BRIEF.md. Inspect the actual source rather than assuming the scaffold works. The brief is the main reference for product vision, architecture, decisions, research questions and evaluation plan.
+
+DECISIONS TO PRESERVE UNLESS EVIDENCE JUSTIFIES CHANGE
+- React + Vite + TypeScript; FastAPI; one bounded LangGraph StateGraph.
+- PostgreSQL is the source of truth; use minimal, expiring anonymous group plans.
+- Keep Qloo behind a server-side adapter and group ranking in deterministic Python.
+- The LLM may interpret flexible inputs and explain validated evidence, but cannot invent candidates or override hard constraints.
+- Initially provide Maps search links; don't claim current opening hours or availability are verified.
+- No multi-agent swarm, vector DB, Redis, queues, microservices or graph checkpointing unless a demonstrated requirement appears.
+- Target free tiers and event quotas, but don't claim unlimited free operation.
+
+PHASE 0 — READ-ONLY AUDIT AND RESEARCH
+Do not edit application code, dependencies, schema, deployment or GitHub state. Audit the repo and run safe checks; state precisely what you did and did not test. Verify the current official Qloo hackathon docs: endpoint host, auth, /search, /v2/tags, GET /v2/insights, required parameters, response shape, explainability behaviour and quotas. Unsupported parameters may be silently ignored; do not assume a successful HTTP response means useful coverage.
+
+Evaluate three approaches: LLM-only baseline; combined-profile Qloo query; Qloo plus limited per-person queries. Identify API cost, failure modes and measurable evidence that Qloo adds value. Review Google Maps Ask Maps, Yelp Assistant, Group Table, Quewi and Spotify Blend using reliable sources. Treat competitor gaps as hypotheses unless verified.
+
+Create/update ONLY docs/RESEARCH_AND_DESIGN_FINDINGS.md and a short prioritised action list. Label each finding DOCUMENTED FACT, REPO-VERIFIED FACT, HYPOTHESIS or OPEN QUESTION; include dated source URLs. Do not call live APIs unless credentials are securely configured and the user explicitly authorised their use. Never print or commit secrets or full private Qloo payloads.
+
+OUTPUT AND CREDIT DISCIPLINE
+Conclude with GO / MODIFY / NO-GO, top five blockers, minimum reliable demo scope, validation experiment and next decisions. Keep the chat summary under 1,500 words; put supporting detail in the document. Read selectively, avoid dumping whole files, avoid subagents and broad refactors, and do not repeat research without reason. Make no code changes in Phase 0. Do not commit, push or merge. Stop for user review before implementation. Later, handle one feature per branch with tests and a clear definition of done.
