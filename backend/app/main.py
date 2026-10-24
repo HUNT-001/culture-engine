@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import health, recommendations
+from app.api.routes import health, plans, recommendations
 from app.core.config import get_settings
 from app.db.base import Base
 from app.db.session import engine
@@ -33,10 +33,11 @@ app.add_middleware(
     allow_origins=settings.cors_origin_list,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-Share-Token", "X-Participant-Token"],
 )
 app.include_router(health.router, prefix="/api")
 app.include_router(recommendations.router, prefix="/api")
+app.include_router(plans.router, prefix="/api")
 
 
 @app.get("/")

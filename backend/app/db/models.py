@@ -13,11 +13,15 @@ class PlanModel(Base):
     __tablename__ = "plans"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
     location: Mapped[str] = mapped_column(String(160), nullable=False)
+    # SHA-256 of the share token; the raw token is returned once at creation and never stored.
+    share_token_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     budget_per_person: Mapped[float | None] = mapped_column(Float, nullable=True)
     status: Mapped[str] = mapped_column(String(24), default="created", nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
-    participants: Mapped[list["ParticipantModel"]] = relationship(back_populates="plan", cascade="all, delete-orphan")
+    participants: Mapped[list["ParticipantModel"]] = relationship(
+        back_populates="plan", cascade="all, delete-orphan", order_by="ParticipantModel.created_at"
+    )
 
 
 class ParticipantModel(Base):
@@ -28,7 +32,9 @@ class ParticipantModel(Base):
     join_token_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     plan: Mapped[PlanModel] = relationship(back_populates="participants")
-    preferences: Mapped[list["PreferenceModel"]] = relationship(back_populates="participant", cascade="all, delete-orphan")
+    preferences: Mapped[list["PreferenceModel"]] = relationship(
+        back_populates="participant", cascade="all, delete-orphan", order_by="PreferenceModel.id"
+    )
 
 
 class PreferenceModel(Base):
