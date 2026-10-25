@@ -42,9 +42,12 @@ def merge_candidate_batches(
                 current = candidate.model_copy(deep=True)
                 current.participant_ranks = {}
                 current.participant_affinities = {}
+                current.combined_rank = None
                 current.reasons = []
                 merged[candidate.entity_id] = current
-            current.participant_ranks[participant_id] = rank
+            # A repeated entity in one list keeps its best (lowest) rank.
+            previous = current.participant_ranks.get(participant_id)
+            current.participant_ranks[participant_id] = rank if previous is None else min(previous, rank)
             # Each participant query is a separate Qloo call, so capture that query's
             # affinity for this participant rather than collapsing them together.
             affinity = _affinity_of(candidate)
@@ -60,8 +63,9 @@ def merge_candidate_batches(
             current = candidate.model_copy(deep=True)
             current.participant_ranks = {}
             current.participant_affinities = {}
+            current.combined_rank = None
             merged[candidate.entity_id] = current
-        current.combined_rank = rank
+        current.combined_rank = rank if current.combined_rank is None else min(current.combined_rank, rank)
         if current.address is None and candidate.address:
             current.address = candidate.address
         if current.qloo_explanation is None and candidate.qloo_explanation is not None:
@@ -89,6 +93,27 @@ def _affinity_bounds(
         if len(values) >= 2 and max(values) > min(values):
             bounds[participant_id] = (min(values), max(values))
     return bounds
+
+
+def apply_hard_constraints(
+    candidates: list[Candidate], dislikes: list[str]
+) -> tuple[list[Candidate], list[str]]:
+    """Exclude candidates whose name exactly matches a stated dislike (case-insensitive).
+
+    Only exact matches are enforced; broader dislikes (e.g. "loud bars") cannot be checked
+    against the available candidate data and must not be presented as enforced.
+    """
+    blocked = {term.casefold().strip() for term in dislikes if term.strip()}
+    if not blocked:
+        return candidates, []
+    kept: list[Candidate] = []
+    excluded: list[str] = []
+    for candidate in candidates:
+        if candidate.name.casefold().strip() in blocked:
+            excluded.append(candidate.entity_id)
+        else:
+            kept.append(candidate)
+    return kept, excluded
 
 
 def rank_candidates(candidates: list[Candidate], participant_ids: list[str], location: str) -> list[Candidate]:

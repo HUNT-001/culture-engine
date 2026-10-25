@@ -15,4 +15,6 @@ class RecommendationState(TypedDict, total=False):
     warnings: list[str]
     query_count: int
     error_code: str
+    provider_errors: list[str]
+    excluded_entity_ids: list[str]
     status: str

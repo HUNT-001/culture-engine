@@ -4,9 +4,17 @@ from uuid import uuid4
 from app.domain.schemas import Candidate, RecommendationOption, RecommendationRequest
 from app.providers.interfaces import QlooProvider, ComposerProvider
 from app.providers.qloo import QlooProviderError
-from app.services.ranking import merge_candidate_batches, rank_candidates, select_options
+from app.services.ranking import (
+    apply_hard_constraints,
+    merge_candidate_batches,
+    rank_candidates,
+    select_options,
+)
 from app.services.provenance import validate_and_label_options
 from app.workflows.state import RecommendationState
+
+# Errors that will repeat on every further call: stop the run instead of degrading.
+FATAL_PROVIDER_CODES = {"QLOO_AUTH_ERROR", "QLOO_RATE_LIMIT"}
 
 
 class WorkflowDependencies:
@@ -25,6 +33,7 @@ def build_nodes(deps: WorkflowDependencies):
             "demo_mode": deps.demo_mode,
             "warnings": list(state.get("warnings", [])),
             "query_count": 0,
+            "provider_errors": [],
             "status": "running",
             "_validated_request": request.model_dump(),
         }
@@ -33,7 +42,10 @@ def build_nodes(deps: WorkflowDependencies):
         request = RecommendationRequest.model_validate(state["_validated_request"])
         resolved: dict[str, list[dict[str, Any]]] = {}
         unresolved: list[str] = []
-        cache: dict[str, list[dict[str, Any]]] = {}
+        provider_errors = list(state.get("provider_errors", []))
+        lookup_failed = False
+        # None marks a term whose lookup failed, so it is not retried within this run.
+        cache: dict[str, list[dict[str, Any]] | None] = {}
         for participant in request.participants:
             resolved[participant.participant_id] = []
             for term in participant.interests:
@@ -42,8 +54,15 @@ def build_nodes(deps: WorkflowDependencies):
                     try:
                         cache[key] = await deps.qloo.search_entities(term, take=3)
                     except QlooProviderError as exc:
-                        raise exc
+                        if exc.code in FATAL_PROVIDER_CODES:
+                            raise
+                        provider_errors.append(exc.code)
+                        cache[key] = None
                 matches = cache[key]
+                if matches is None:
+                    lookup_failed = True
+                    unresolved.append(f"{participant.display_name}: {term}")
+                    continue
                 if not matches:
                     unresolved.append(f"{participant.display_name}: {term}")
                     continue
@@ -56,12 +75,17 @@ def build_nodes(deps: WorkflowDependencies):
                     "name": str(selected["name"]),
                     "entity_type": selected.get("entity_type", "unknown"),
                 })
+        warnings = list(state.get("warnings", []))
+        if lookup_failed:
+            warnings.append("Some interests could not be looked up because the cultural data provider failed.")
         if unresolved:
-            warnings = list(state.get("warnings", []))
             warnings.append("Some interests could not be resolved and were excluded.")
-        else:
-            warnings = list(state.get("warnings", []))
-        return {"resolved_profiles": resolved, "unresolved_interests": unresolved, "warnings": warnings}
+        return {
+            "resolved_profiles": resolved,
+            "unresolved_interests": unresolved,
+            "warnings": warnings,
+            "provider_errors": provider_errors,
+        }
 
     async def retrieve_insights(state: RecommendationState) -> dict[str, Any]:
         request = RecommendationRequest.model_validate(state["_validated_request"])
@@ -69,6 +93,7 @@ def build_nodes(deps: WorkflowDependencies):
         batches: dict[str, list[dict[str, Any]]] = {}
         query_count = 0
         warnings = list(state.get("warnings", []))
+        provider_errors = list(state.get("provider_errors", []))
         try:
             all_ids = []
             for participant in request.participants:
@@ -96,6 +121,7 @@ def build_nodes(deps: WorkflowDependencies):
         except QlooProviderError as exc:
             # Keep partial participant batches if any, rather than discarding valid results.
             warnings.append(f"Cultural recommendation retrieval was limited ({exc.code}).")
+            provider_errors.append(exc.code)
             combined = []
             if not batches:
                 batches = {p.participant_id: [] for p in request.participants}
@@ -104,6 +130,7 @@ def build_nodes(deps: WorkflowDependencies):
             "combined_batch": combined,
             "query_count": query_count,
             "warnings": warnings,
+            "provider_errors": provider_errors,
         }
 
     async def normalize_candidates(state: RecommendationState) -> dict[str, Any]:
@@ -114,8 +141,19 @@ def build_nodes(deps: WorkflowDependencies):
         combined = [Candidate.model_validate(c) for c in state.get("combined_batch", [])]
         merged = merge_candidate_batches(batches, combined)
         request = RecommendationRequest.model_validate(state["_validated_request"])
+        dislikes = [term for p in request.participants for term in p.dislikes]
+        merged, excluded = apply_hard_constraints(merged, dislikes)
+        warnings = list(state.get("warnings", []))
+        if excluded:
+            warnings.append(
+                f"{len(excluded)} candidate(s) were excluded because they matched a participant's stated dislike."
+            )
         ranked = rank_candidates(merged, [p.participant_id for p in request.participants], request.location)
-        return {"candidates": [c.model_dump() for c in ranked]}
+        return {
+            "candidates": [c.model_dump() for c in ranked],
+            "excluded_entity_ids": excluded,
+            "warnings": warnings,
+        }
 
     async def rank_options(state: RecommendationState) -> dict[str, Any]:
         request = RecommendationRequest.model_validate(state["_validated_request"])
@@ -127,6 +165,18 @@ def build_nodes(deps: WorkflowDependencies):
         options = [RecommendationOption.model_validate(o) for o in state.get("options", [])]
         options = validate_and_label_options(options, deps.demo_mode)
         warnings = list(state.get("warnings", []))
+        request = RecommendationRequest.model_validate(state["_validated_request"])
+        if request.budget_per_person is not None:
+            warnings.append(
+                "Budget was recorded but venue prices are not available from the current data source, "
+                "so it has not been checked."
+            )
+        represented = {pid for option in options for pid in option.candidate.participant_ranks}
+        for participant in request.participants:
+            if options and participant.participant_id not in represented:
+                warnings.append(
+                    f"None of the selected options appeared in {participant.display_name}'s individual results."
+                )
         if len(options) < 3:
             warnings.append("Fewer than three distinct, evidence-backed options were available.")
         if not options:
@@ -155,7 +205,12 @@ def build_nodes(deps: WorkflowDependencies):
 
     async def validate_output(state: RecommendationState) -> dict[str, Any]:
         # Parse output schemas before returning. Do not let the LLM create arbitrary candidates.
-        validated = [RecommendationOption.model_validate(o).model_dump() for o in state.get("options", [])]
+        excluded = set(state.get("excluded_entity_ids", []))
+        validated = [
+            RecommendationOption.model_validate(o).model_dump()
+            for o in state.get("options", [])
+            if o["candidate"]["entity_id"] not in excluded
+        ]
         return {"options": validated}
 
     return {
