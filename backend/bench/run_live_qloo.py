@@ -133,10 +133,28 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-requests", type=int, default=None,
                     help="hard cap (default: the planned upper bound)")
     ap.add_argument("--force-proxy-auth", action="store_true")
+    ap.add_argument("--resolution", action="store_true",
+                    help="phase L0+L1 only: 1 probe + 11 /search, hard cap 12, no Insights")
+    ap.add_argument("--out-dir", default=None,
+                    help="where --resolution writes Qloo-derived candidates (keep OUT of git)")
     args = ap.parse_args(argv)
     if not args.confirm_live:
         raise SystemExit("Refusing to send live requests without --confirm-live. "
                          f"Planned upper bound: {plan()['total_upper_bound']} requests.")
+    if args.resolution:
+        if args.probe:
+            raise SystemExit("--resolution already includes its own probe; do not combine")
+        from bench import live_resolution
+        cap = min(args.max_requests or live_resolution.HARD_CAP, live_resolution.HARD_CAP)
+        out_dir = Path(args.out_dir) if args.out_dir else LIVE_DIR
+        result = live_resolution.main_async(_client(args.force_proxy_auth), out_dir, cap)
+        ok = sum(1 for q in result["queries"] if q.get("ok"))
+        print(json.dumps({"requests": result["requests"], "queries_ok": ok,
+                          "queries_attempted": len(result["queries"]),
+                          "aborted": result["aborted"],
+                          "written_to": str(out_dir / "live_resolution_candidates.json")},
+                         indent=2))
+        return 0
     cap = args.max_requests or plan()["total_upper_bound"]
     result = (asyncio.run(_probe(cap, args.force_proxy_auth)) if args.probe
               else asyncio.run(_cases(cap, args.force_proxy_auth)))
