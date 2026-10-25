@@ -47,3 +47,35 @@ export type RecommendationResponse = {
   unresolved_interests: string[]
   status: 'complete' | 'partial' | 'failed'
 }
+
+// --- Group plan lifecycle (matches backend app/domain/schemas.py) ---
+
+export type PlanCreatedResponse = {
+  plan_id: string
+  share_token: string
+  expires_at: string
+}
+
+export type JoinPlanResponse = {
+  participant_id: string
+  participant_token: string
+}
+
+export type ParticipantView = {
+  participant_id: string
+  display_name: string
+  interests: string[]
+  dislikes: string[]
+  has_preferences: boolean
+}
+
+export type PlanView = {
+  plan_id: string
+  location: string
+  budget_per_person: number | null
+  status: string
+  expires_at: string
+  max_participants: number
+  participants: ParticipantView[]
+  latest_recommendation: RecommendationResponse | null
+}
