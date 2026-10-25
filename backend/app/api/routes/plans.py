@@ -22,6 +22,8 @@ from app.domain.schemas import (
     PreferencesUpdate,
     RecommendationRequest,
     RecommendationResponse,
+    ResolvedInterestInput,
+    ResolvedInterestView,
 )
 from app.services.runtime import get_runtime
 
@@ -46,12 +48,24 @@ def _load_plan(db: Session, plan_id: str, share_token: str | None, lock: bool = 
 
 
 def _participant_view(participant: ParticipantModel) -> ParticipantView:
-    interests = [p.display_name for p in participant.preferences if p.kind == "interest"]
+    interest_prefs = [p for p in participant.preferences if p.kind == "interest"]
+    interests = [p.display_name for p in interest_prefs]
     dislikes = [p.display_name for p in participant.preferences if p.kind == "dislike"]
+    resolved = [
+        ResolvedInterestView(
+            text=p.display_name,
+            entity_id=p.entity_id,
+            name=p.resolved_name or p.display_name,
+            entity_type=p.entity_type or "unknown",
+        )
+        for p in interest_prefs
+        if p.entity_id
+    ]
     return ParticipantView(
         participant_id=participant.id,
         display_name=participant.display_name,
         interests=interests,
+        resolved_interests=resolved,
         dislikes=dislikes,
         has_preferences=bool(interests),
     )
@@ -117,7 +131,9 @@ def update_preferences(
         raise HTTPException(status_code=404, detail=NOT_FOUND)
     if repo.is_expired(participant.plan):
         raise HTTPException(status_code=410, detail="This plan has expired.")
-    participant = repo.replace_preferences(db, participant, body.interests, body.dislikes)
+    participant = repo.replace_preferences(
+        db, participant, body.interests, body.dislikes, resolved=body.resolved_interests
+    )
     return _participant_view(participant)
 
 
@@ -144,6 +160,14 @@ async def run_plan_recommendations(
                 participant_id=v.participant_id,
                 display_name=v.display_name,
                 interests=v.interests,
+                # Confirmed entities persisted earlier flow straight to Insights — the
+                # workflow does not re-resolve them.
+                resolved_interests=[
+                    ResolvedInterestInput(
+                        text=r.text, entity_id=r.entity_id, name=r.name, entity_type=r.entity_type
+                    )
+                    for r in v.resolved_interests
+                ],
                 dislikes=v.dislikes,
             )
             for v in ready

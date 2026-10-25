@@ -8,8 +8,12 @@ import {
 } from '../api/client'
 import type { PlanView, RecommendationResponse } from '../types'
 import { normalizeInterests } from '../lib/plan'
+import {
+  buildInterestPayload, newRow, rowsFromSaved, validateInterestRows, type InterestRow,
+} from '../lib/interests'
 import { clearSession, loadSession, saveSession, type DeviceSession } from '../lib/session'
 import { cleanCode, formatInviteText, hoursUntil, validateJoinInput } from '../lib/invite'
+import InterestPicker from './InterestPicker'
 import ResultsPanel from './ResultsPanel'
 
 type Props = { onMode: (demo: boolean) => void }
@@ -41,7 +45,7 @@ export default function CollaborativePlanner({ onMode }: Props) {
   const [joinToken, setJoinToken] = useState('')
   // Self + prefs forms
   const [displayName, setDisplayName] = useState('')
-  const [interestsText, setInterestsText] = useState('')
+  const [interestRows, setInterestRows] = useState<InterestRow[]>([newRow()])
   const [dislikesText, setDislikesText] = useState('')
 
   const [busy, setBusy] = useState(false)
@@ -74,7 +78,7 @@ export default function CollaborativePlanner({ onMode }: Props) {
     if (!plan || !session?.participant) return
     const me = plan.participants.find((p) => p.participant_id === session.participant!.participantId)
     if (me && me.has_preferences) {
-      setInterestsText(me.interests.join(', '))
+      setInterestRows(rowsFromSaved(me.interests, me.resolved_interests))
       setDislikesText(me.dislikes.join(', '))
     }
   }, [plan, session])
@@ -146,15 +150,14 @@ export default function CollaborativePlanner({ onMode }: Props) {
     e.preventDefault()
     if (!session?.participant) return
     setError(''); setFieldErrors([])
-    const interests = normalizeInterests(interestsText)
+    const rowErrors = validateInterestRows(interestRows)
+    if (rowErrors.length) { setFieldErrors(rowErrors); return }
+    const { interests, resolved_interests } = buildInterestPayload(interestRows)
     const dislikes = normalizeInterests(dislikesText)
-    if (interests.length === 0) {
-      setFieldErrors(['Add at least one interest (letters or words, not just spaces or commas).']); return
-    }
     setBusy(true)
     try {
       await setPreferences(session.planId, session.participant.participantId,
-        session.participant.participantToken, { interests, dislikes })
+        session.participant.participantToken, { interests, resolved_interests, dislikes })
       await refreshPlan(session)
     } catch (err) { setError(describeError(err)) } finally { setBusy(false) }
   }
@@ -175,7 +178,7 @@ export default function CollaborativePlanner({ onMode }: Props) {
     clearSession()
     setSession(null); setPlan(null); setRunResult(null); setError(''); setExpired(false)
     setScreen('choose'); setFieldErrors([])
-    setDisplayName(''); setInterestsText(''); setDislikesText('')
+    setDisplayName(''); setInterestRows([newRow()]); setDislikesText('')
     setJoinPlanId(''); setJoinToken('')
   }
 
@@ -340,9 +343,8 @@ export default function CollaborativePlanner({ onMode }: Props) {
                   You're in as <strong>{session.participant.displayName}</strong>.
                   {me?.has_preferences ? ' Your saved interests are below — edit any time.' : ' Add up to three interests.'}
                 </p>
-                <label className="field-label" htmlFor="pref-interests">Interests (comma-separated)</label>
-                <input id="pref-interests" className="plain-input" value={interestsText}
-                  onChange={(e) => setInterestsText(e.target.value)} placeholder="e.g. indie rock, anime, coffee" />
+                <label className="field-label">Interests</label>
+                <InterestPicker idPrefix="pref" rows={interestRows} onChange={setInterestRows} />
                 <label className="field-label interests-label" htmlFor="pref-dislikes">Dislikes (optional)</label>
                 <input id="pref-dislikes" className="plain-input" value={dislikesText}
                   onChange={(e) => setDislikesText(e.target.value)} placeholder="Exact names to exclude" />

@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 from app.core.security import hash_token, new_token, token_matches
 from app.db.models import ParticipantModel, PlanModel, PreferenceModel, RecommendationRunModel
+from app.services.resolution import confirmed_index, normalize_name
 
 
 def utc_now() -> datetime:
@@ -88,11 +89,28 @@ def get_participant_for_token(
 
 
 def replace_preferences(
-    db: Session, participant: ParticipantModel, interests: list[str], dislikes: list[str]
+    db: Session,
+    participant: ParticipantModel,
+    interests: list[str],
+    dislikes: list[str],
+    resolved: list | None = None,
 ) -> ParticipantModel:
+    """Replace a participant's preferences, persisting any confirmed Qloo entity.
+
+    `resolved` is a confirmed-entity overlay (ResolvedInterestInput-like objects) matched to
+    interest text; its entity_id / verified name are stored so interests are not re-resolved.
+    """
+    index = confirmed_index(resolved or [])
     participant.preferences.clear()
     for term in interests:
-        participant.preferences.append(PreferenceModel(display_name=term, kind="interest"))
+        match = index.get(normalize_name(term))
+        participant.preferences.append(PreferenceModel(
+            display_name=term,
+            kind="interest",
+            entity_id=match["entity_id"] if match else None,
+            entity_type=(match.get("entity_type") if match else None),
+            resolved_name=match["name"] if match else None,
+        ))
     for term in dislikes:
         participant.preferences.append(PreferenceModel(display_name=term, kind="dislike"))
     db.commit()

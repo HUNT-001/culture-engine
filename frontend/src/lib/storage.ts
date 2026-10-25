@@ -1,27 +1,34 @@
 // Local, device-only persistence so a participant can reload and revisit their
 // last plan. The backend exposes no plan/credential endpoints, so nothing secret
 // is stored here — only the inputs the user already typed and the public result.
-import type { RecommendationResponse } from '../types'
-import type { DraftParticipant } from './plan'
+import type { RecommendationResponse, ResolvedInterest } from '../types'
 
-const STORAGE_KEY = 'common-thread.lastPlan.v1'
+const STORAGE_KEY = 'common-thread.lastPlan.v2'
+
+export type SavedParticipant = {
+  participant_id: string
+  display_name: string
+  interests: string[]
+  resolved_interests: ResolvedInterest[]
+}
 
 export type SavedPlan = {
   planRef: string
   savedAt: string
   location: string
   budget: string
-  participants: DraftParticipant[]
+  participants: SavedParticipant[]
   result: RecommendationResponse | null
 }
 
-function isDraftParticipant(value: unknown): value is DraftParticipant {
+function isSavedParticipant(value: unknown): value is SavedParticipant {
   if (!value || typeof value !== 'object') return false
   const v = value as Record<string, unknown>
   return (
     typeof v.participant_id === 'string' &&
     typeof v.display_name === 'string' &&
-    typeof v.interestsText === 'string'
+    Array.isArray(v.interests) &&
+    Array.isArray(v.resolved_interests)
   )
 }
 
@@ -50,7 +57,7 @@ export function loadPlan(): SavedPlan | null {
       typeof candidate.location !== 'string' ||
       typeof candidate.budget !== 'string' ||
       !Array.isArray(candidate.participants) ||
-      !candidate.participants.every(isDraftParticipant)
+      !candidate.participants.every(isSavedParticipant)
     ) {
       return null
     }

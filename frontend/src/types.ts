@@ -50,6 +50,30 @@ export type RecommendationResponse = {
   status: 'complete' | 'partial' | 'failed'
 }
 
+// --- Entity confirmation ---
+
+export type EntityCandidate = {
+  entity_id: string
+  name: string
+  entity_type: string
+  disambiguation?: string | null
+  source: 'qloo' | 'mock'
+}
+
+export type EntitySearchResponse = {
+  query: string
+  demo_mode: boolean
+  candidates: EntityCandidate[]
+}
+
+// A user-confirmed interest: typed text + the selected Qloo entity.
+export type ResolvedInterest = {
+  text: string
+  entity_id: string
+  name: string
+  entity_type: string
+}
+
 // --- Group plan lifecycle (matches backend app/domain/schemas.py) ---
 
 export type PlanCreatedResponse = {
@@ -67,6 +91,7 @@ export type ParticipantView = {
   participant_id: string
   display_name: string
   interests: string[]
+  resolved_interests: ResolvedInterest[]
   dislikes: string[]
   has_preferences: boolean
 }

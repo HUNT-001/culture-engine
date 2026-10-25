@@ -2,27 +2,29 @@ import { useEffect, useState } from 'react'
 import { ArrowUpRight, Compass, LoaderCircle, MapPin, Plus, RotateCcw, Users, X } from 'lucide-react'
 import { getRecommendations } from '../api/client'
 import type { RecommendationResponse } from '../types'
+import { MAX_PARTICIPANTS, MIN_PARTICIPANTS, newParticipantId } from '../lib/plan'
 import {
-  buildPayload, MAX_PARTICIPANTS, MIN_PARTICIPANTS, newParticipantId,
-  validatePlan, type DraftParticipant,
-} from '../lib/plan'
+  buildInterestPayload, newRow, rowsFromSaved, validateInterestRows, type InterestRow,
+} from '../lib/interests'
 import { clearPlan, loadPlan, newPlanRef, savePlan, type SavedPlan } from '../lib/storage'
+import InterestPicker from './InterestPicker'
 import ResultsPanel from './ResultsPanel'
 
-function freshGroup(): DraftParticipant[] {
+type QuickParticipant = { participant_id: string; display_name: string; rows: InterestRow[] }
+
+function freshGroup(): QuickParticipant[] {
   return [
-    { participant_id: newParticipantId(), display_name: 'You', interestsText: 'indie rock, modern art' },
-    { participant_id: newParticipantId(), display_name: 'Friend', interestsText: 'specialty coffee, indie films' },
+    { participant_id: newParticipantId(), display_name: 'You', rows: [newRow('indie rock'), newRow('modern art')] },
+    { participant_id: newParticipantId(), display_name: 'Friend', rows: [newRow('specialty coffee'), newRow('indie films')] },
   ]
 }
 
 type Props = { onMode: (demo: boolean) => void }
 
-/** Same-device "quick" flow against the stateless POST /api/recommendations endpoint. */
 export default function QuickPlanner({ onMode }: Props) {
   const [location, setLocation] = useState('Chennai, Tamil Nadu, India')
   const [budget, setBudget] = useState('800')
-  const [participants, setParticipants] = useState<DraftParticipant[]>(freshGroup)
+  const [participants, setParticipants] = useState<QuickParticipant[]>(freshGroup)
   const [planRef, setPlanRef] = useState<string>(() => newPlanRef())
   const [result, setResult] = useState<RecommendationResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -34,33 +36,64 @@ export default function QuickPlanner({ onMode }: Props) {
 
   const participantCount = participants.length
 
-  function updateParticipant(index: number, patch: Partial<DraftParticipant>) {
-    setParticipants((current) => current.map((p, i) => (i === index ? { ...p, ...patch } : p)))
+  function updateParticipant(index: number, patch: Partial<QuickParticipant>) {
+    setParticipants((cur) => cur.map((p, i) => (i === index ? { ...p, ...patch } : p)))
   }
   function addParticipant() {
-    setParticipants((current) =>
-      current.length >= MAX_PARTICIPANTS
-        ? current
-        : [...current, { participant_id: newParticipantId(), display_name: '', interestsText: '' }])
+    setParticipants((cur) => cur.length >= MAX_PARTICIPANTS ? cur
+      : [...cur, { participant_id: newParticipantId(), display_name: '', rows: [newRow()] }])
   }
   function removeParticipant(index: number) {
-    setParticipants((current) =>
-      current.length <= MIN_PARTICIPANTS ? current : current.filter((_, i) => i !== index))
+    setParticipants((cur) => cur.length <= MIN_PARTICIPANTS ? cur : cur.filter((_, i) => i !== index))
+  }
+
+  function validate(): string[] {
+    const errors: string[] = []
+    const loc = location.trim()
+    if (loc.length < 2) errors.push('Enter a location (at least 2 characters).')
+    if (budget.trim()) {
+      const n = Number(budget)
+      if (!Number.isFinite(n) || n <= 0) errors.push('Budget must be a positive number, or leave it blank.')
+      else if (n > 100000) errors.push('Budget looks too large (max 100000).')
+    }
+    if (participantCount < MIN_PARTICIPANTS) errors.push(`Add at least ${MIN_PARTICIPANTS} participants.`)
+    participants.forEach((p, i) => {
+      const label = p.display_name.trim() || `Participant ${i + 1}`
+      if (!p.display_name.trim()) errors.push(`Participant ${i + 1} needs a name.`)
+      if (validateInterestRows(p.rows).length) errors.push(`${label} needs at least one interest.`)
+    })
+    return errors
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    const check = validatePlan(location, budget, participants)
-    setValidationErrors(check.errors)
-    if (!check.ok) return
+    const errs = validate()
+    setValidationErrors(errs)
+    if (errs.length) return
     setLoading(true)
     setResult(null)
     try {
-      const response = await getRecommendations(buildPayload(location, budget, participants))
+      const builtParticipants = participants.map((p) => {
+        const { interests, resolved_interests } = buildInterestPayload(p.rows)
+        return { participant_id: p.participant_id, display_name: p.display_name.trim(), interests, resolved_interests }
+      })
+      const payload = {
+        location: location.trim(),
+        ...(budget.trim() ? { budget_per_person: Number(budget) } : {}),
+        participants: builtParticipants,
+      }
+      const response = await getRecommendations(payload)
       setResult(response)
       onMode(response.demo_mode)
-      const toSave: SavedPlan = { planRef, savedAt: new Date().toISOString(), location, budget, participants, result: response }
+      const toSave: SavedPlan = {
+        planRef, savedAt: new Date().toISOString(), location, budget,
+        participants: builtParticipants.map((p) => ({
+          participant_id: p.participant_id, display_name: p.display_name,
+          interests: p.interests, resolved_interests: p.resolved_interests,
+        })),
+        result: response,
+      }
       savePlan(toSave)
       setSavedPlan(toSave)
     } catch (err) {
@@ -72,7 +105,12 @@ export default function QuickPlanner({ onMode }: Props) {
 
   function resumeSaved() {
     if (!savedPlan) return
-    setLocation(savedPlan.location); setBudget(savedPlan.budget); setParticipants(savedPlan.participants)
+    setLocation(savedPlan.location); setBudget(savedPlan.budget)
+    setParticipants(savedPlan.participants.map((p) => ({
+      participant_id: p.participant_id || newParticipantId(),
+      display_name: p.display_name,
+      rows: rowsFromSaved(p.interests, p.resolved_interests),
+    })))
     setPlanRef(savedPlan.planRef); setResult(savedPlan.result); setError(''); setValidationErrors([])
   }
   function discardSaved() { clearPlan(); setSavedPlan(null) }
@@ -119,8 +157,8 @@ export default function QuickPlanner({ onMode }: Props) {
             <span className="small-muted">{participantCount}/{MAX_PARTICIPANTS} people</span>
           </div>
           <p className="helper">
-            Everyone is added here in one session on this device. For a multi-device plan, switch to
-            Collaborative above.
+            Add each friend and their interests. Search to confirm which Qloo entity you mean, or
+            leave it as typed — exact matches are auto-accepted, ambiguous ones stay unresolved.
           </p>
           <div className="participants-list">
             {participants.map((person, index) => (
@@ -135,12 +173,9 @@ export default function QuickPlanner({ onMode }: Props) {
                 <input id={`q-name-${index}`} className="plain-input" value={person.display_name} maxLength={60}
                   onChange={(e) => updateParticipant(index, { display_name: e.target.value })}
                   placeholder="Name or nickname" />
-                <label className="field-label interests-label" htmlFor={`q-interests-${index}`}>
-                  Interests (comma-separated)
-                </label>
-                <input id={`q-interests-${index}`} className="plain-input" value={person.interestsText}
-                  onChange={(e) => updateParticipant(index, { interestsText: e.target.value })}
-                  placeholder="e.g. indie rock, anime, coffee" />
+                <label className="field-label interests-label">Interests</label>
+                <InterestPicker idPrefix={`q-${index}`} rows={person.rows}
+                  onChange={(rows) => updateParticipant(index, { rows })} />
               </div>
             ))}
           </div>
@@ -189,14 +224,9 @@ export default function QuickPlanner({ onMode }: Props) {
             </div>
           )}
           {result && (
-            <ResultsPanel
-              result={result}
-              participantCount={participantCount}
-              eyebrow={`YOUR CULTURAL THREAD · ${planRef}`}
-              title="Three ways to go"
-              onReset={startNewPlan}
-              resetLabel="New plan"
-            />
+            <ResultsPanel result={result} participantCount={participantCount}
+              eyebrow={`YOUR CULTURAL THREAD · ${planRef}`} title="Three ways to go"
+              onReset={startNewPlan} resetLabel="New plan" />
           )}
         </aside>
       </section>

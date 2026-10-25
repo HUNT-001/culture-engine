@@ -1,6 +1,6 @@
 import type {
-  JoinPlanResponse, ParticipantView, PlanCreatedResponse, PlanView,
-  RecommendationRequest, RecommendationResponse,
+  EntitySearchResponse, JoinPlanResponse, ParticipantView, PlanCreatedResponse, PlanView,
+  RecommendationRequest, RecommendationResponse, ResolvedInterest,
 } from '../types'
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '')
@@ -82,6 +82,11 @@ export async function getRecommendations(payload: RecommendationRequest): Promis
   return request<RecommendationResponse>('/recommendations', { method: 'POST', body: payload })
 }
 
+export async function searchEntities(query: string, take = 5): Promise<EntitySearchResponse> {
+  const q = encodeURIComponent(query.trim())
+  return request<EntitySearchResponse>(`/entities/search?query=${q}&take=${take}`)
+}
+
 // --- Group plan lifecycle ---
 
 export function createPlan(input: { location: string; budget_per_person?: number }): Promise<PlanCreatedResponse> {
@@ -100,7 +105,7 @@ export function joinPlan(planId: string, shareToken: string, displayName: string
 
 export function setPreferences(
   planId: string, participantId: string, participantToken: string,
-  prefs: { interests: string[]; dislikes: string[] },
+  prefs: { interests: string[]; resolved_interests?: ResolvedInterest[]; dislikes: string[] },
 ): Promise<ParticipantView> {
   return request<ParticipantView>(
     `/plans/${encodeURIComponent(planId)}/participants/${encodeURIComponent(participantId)}/preferences`,

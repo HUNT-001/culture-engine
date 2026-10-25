@@ -41,9 +41,13 @@ class PreferenceModel(Base):
     __tablename__ = "preferences"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     participant_id: Mapped[str] = mapped_column(ForeignKey("participants.id", ondelete="CASCADE"), nullable=False)
+    # The original text the user typed for this interest/dislike.
     display_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    # Confirmed Qloo entity, when the user selected one (null = unconfirmed/unresolved).
     entity_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
     entity_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # Verified Qloo display name for the confirmed entity (null when unconfirmed).
+    resolved_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     kind: Mapped[str] = mapped_column(String(16), default="interest", nullable=False)
     participant: Mapped[ParticipantModel] = relationship(back_populates="preferences")
 

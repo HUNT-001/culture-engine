@@ -120,10 +120,12 @@ class QlooClient:
             entity_id = item.get("entity_id") or item.get("id") or item.get("qid")
             name = item.get("name") or item.get("name_label") or item.get("label")
             if entity_id and name:
+                disambiguation = item.get("disambiguation")
                 entities.append({
                     "entity_id": str(entity_id),
                     "name": str(name),
                     "entity_type": self._entity_subtype(item, "unknown"),
+                    "disambiguation": str(disambiguation) if disambiguation else None,
                     "raw": item,
                 })
         return entities

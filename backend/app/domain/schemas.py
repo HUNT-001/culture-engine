@@ -22,11 +22,30 @@ def _clean_text(value: str) -> str:
     return value
 
 
+class ResolvedInterestInput(BaseModel):
+    """A user-confirmed interest: the typed text plus the Qloo entity the user selected.
+
+    When present, the workflow uses this entity directly and does NOT re-resolve the text.
+    """
+    model_config = ConfigDict(extra="forbid")
+    text: str = Field(min_length=1, max_length=MAX_TERM_LENGTH)
+    entity_id: str = Field(min_length=1, max_length=200)
+    name: str = Field(min_length=1, max_length=200)
+    entity_type: str = Field(default="unknown", max_length=100)
+
+    @field_validator("text", "entity_id", "name")
+    @classmethod
+    def strip_required(cls, value: str) -> str:
+        return _clean_text(value)
+
+
 class ParticipantInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     participant_id: str = Field(min_length=1, max_length=40)
     display_name: str = Field(min_length=1, max_length=60)
     interests: list[str] = Field(min_length=1, max_length=3)
+    # Optional confirmed-entity overlay, matched to `interests` by text (case-insensitive).
+    resolved_interests: list[ResolvedInterestInput] = Field(default_factory=list, max_length=3)
     dislikes: list[str] = Field(default_factory=list, max_length=5)
 
     @field_validator("interests", "dislikes")
@@ -136,6 +155,8 @@ class JoinPlanResponse(BaseModel):
 class PreferencesUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     interests: list[str] = Field(min_length=1, max_length=3)
+    # Optional confirmed-entity overlay matched to `interests` by text.
+    resolved_interests: list[ResolvedInterestInput] = Field(default_factory=list, max_length=3)
     dislikes: list[str] = Field(default_factory=list, max_length=5)
 
     @field_validator("interests", "dislikes")
@@ -144,12 +165,39 @@ class PreferencesUpdate(BaseModel):
         return _clean_terms(values, info)
 
 
+class ResolvedInterestView(BaseModel):
+    text: str
+    entity_id: str
+    name: str
+    entity_type: str = "unknown"
+
+
 class ParticipantView(BaseModel):
     participant_id: str
     display_name: str
     interests: list[str] = Field(default_factory=list)
+    # Confirmed entities among the interests, for the UI to restore saved selections.
+    resolved_interests: list[ResolvedInterestView] = Field(default_factory=list)
     dislikes: list[str] = Field(default_factory=list)
     has_preferences: bool = False
+
+
+# --- Entity search (bounded user confirmation) ------------------------------------------
+
+
+class EntityCandidate(BaseModel):
+    entity_id: str
+    name: str
+    entity_type: str = "unknown"
+    disambiguation: str | None = None
+    # "qloo" = a real Qloo entity; "mock" = synthetic demo entity, never a real match.
+    source: Literal["qloo", "mock"] = "qloo"
+
+
+class EntitySearchResponse(BaseModel):
+    query: str
+    demo_mode: bool
+    candidates: list[EntityCandidate] = Field(default_factory=list)
 
 
 class PlanView(BaseModel):

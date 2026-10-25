@@ -12,6 +12,7 @@ from app.services.ranking import (
 )
 from app.services.evidence import build_interest_index, matched_interest_names
 from app.services.provenance import validate_and_label_options
+from app.services.resolution import confirmed_index, exact_match, normalize_name
 from app.workflows.state import RecommendationState
 
 # Errors that will repeat on every further call: stop the run instead of degrading.
@@ -49,7 +50,19 @@ def build_nodes(deps: WorkflowDependencies):
         cache: dict[str, list[dict[str, Any]] | None] = {}
         for participant in request.participants:
             resolved[participant.participant_id] = []
+            confirmed = confirmed_index(participant.resolved_interests)
             for term in participant.interests:
+                # 1) A user-confirmed interest is used directly and never re-resolved.
+                match = confirmed.get(normalize_name(term))
+                if match is not None:
+                    resolved[participant.participant_id].append({
+                        "input": term,
+                        "entity_id": match["entity_id"],
+                        "name": match["name"],
+                        "entity_type": match.get("entity_type", "unknown"),
+                    })
+                    continue
+                # 2) Otherwise search, but auto-accept ONLY an exact normalized-name match.
                 key = term.casefold().strip()
                 if key not in cache:
                     try:
@@ -64,12 +77,12 @@ def build_nodes(deps: WorkflowDependencies):
                     lookup_failed = True
                     unresolved.append(f"{participant.display_name}: {term}")
                     continue
-                if not matches:
+                selected = exact_match(term, matches)
+                if selected is None:
+                    # No exact match: do not silently take an ambiguous result; leave it for
+                    # the user to confirm via the entity-search endpoint.
                     unresolved.append(f"{participant.display_name}: {term}")
                     continue
-                # Skeleton policy: use the first search result. Add explicit user confirmation UI
-                # when live search commonly returns ambiguous results; don't silently guess in prod.
-                selected = matches[0]
                 resolved[participant.participant_id].append({
                     "input": term,
                     "entity_id": str(selected["entity_id"]),

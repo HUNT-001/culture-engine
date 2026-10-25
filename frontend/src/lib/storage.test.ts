@@ -20,7 +20,10 @@ function samplePlan(): SavedPlan {
     savedAt: new Date().toISOString(),
     location: 'Austin',
     budget: '800',
-    participants: [{ participant_id: 'p1', display_name: 'Ana', interestsText: 'jazz' }],
+    participants: [{
+      participant_id: 'p1', display_name: 'Ana', interests: ['jazz'],
+      resolved_interests: [{ text: 'jazz', entity_id: 'J1', name: 'Jazz', entity_type: 'urn:tag' }],
+    }],
     result: null,
   }
 }
@@ -37,12 +40,12 @@ describe('plan persistence', () => {
   })
 
   it('returns null for corrupted JSON rather than throwing', () => {
-    localStorage.setItem('common-thread.lastPlan.v1', '{not valid json')
+    localStorage.setItem('common-thread.lastPlan.v2', '{not valid json')
     expect(loadPlan()).toBeNull()
   })
 
   it('rejects a structurally invalid payload', () => {
-    localStorage.setItem('common-thread.lastPlan.v1', JSON.stringify({ planRef: 'x', participants: 'nope' }))
+    localStorage.setItem('common-thread.lastPlan.v2', JSON.stringify({ planRef: 'x', participants: 'nope' }))
     expect(loadPlan()).toBeNull()
   })
 
