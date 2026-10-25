@@ -10,6 +10,7 @@ from app.services.ranking import (
     rank_candidates,
     select_options,
 )
+from app.services.evidence import build_interest_index, matched_interest_names
 from app.services.provenance import validate_and_label_options
 from app.workflows.state import RecommendationState
 
@@ -149,6 +150,13 @@ def build_nodes(deps: WorkflowDependencies):
                 f"{len(excluded)} candidate(s) were excluded because they matched a participant's stated dislike."
             )
         ranked = rank_candidates(merged, [p.participant_id for p in request.participants], request.location)
+        # Translate Qloo explainability signals back to the group's resolved interests,
+        # using only the verified names captured during entity resolution (no new calls).
+        interest_index = build_interest_index(state.get("resolved_profiles", {}))
+        for candidate in ranked:
+            candidate.matched_interests = matched_interest_names(
+                candidate.qloo_explanation, interest_index
+            )
         return {
             "candidates": [c.model_dump() for c in ranked],
             "excluded_entity_ids": excluded,

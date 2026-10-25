@@ -213,16 +213,14 @@ def select_options(candidates: list[Candidate], participant_count: int) -> list[
                 "cultural_bridge": "This candidate appeared in multiple, but not all, individual result sets.",
                 "stretch_choice": "This candidate appeared in combined results and in no more than one individual result set.",
             }[option_type]
+        # These labels describe OUR calculation (coverage + heuristic + verification).
+        # Qloo's own signals (affinity number, matched interests) are surfaced separately
+        # on the candidate, so they are not duplicated here.
         evidence_labels = [
             f"Individual result coverage: {candidate.group_coverage}/{participant_count}",
             "Rank score is a project heuristic, not a probability of enjoyment",
             "Venue details have not been independently verified",
         ]
-        if candidate.qloo_affinity is not None:
-            # Real Qloo signal, labelled separately from our heuristic rank score.
-            evidence_labels.insert(
-                1, f"Qloo affinity signal (max across participants): {candidate.qloo_affinity:.2f}"
-            )
         selected.append(RecommendationOption(
             option_type=actual_type,
             title=title if actual_type != "alternative" else "Alternative",

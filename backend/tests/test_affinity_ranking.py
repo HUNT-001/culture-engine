@@ -140,7 +140,7 @@ def test_duplicate_candidate_across_batches_merges_affinity_per_participant():
     assert ranked[0].qloo_affinity == 0.7
 
 
-def test_option_evidence_cites_qloo_affinity_only_when_present():
+def test_option_evidence_separates_our_calculation_from_qloo_signal():
     with_aff = rank_candidates(
         merge_candidate_batches({"p1": [place("A", 0.8), place("B", 0.2)]}, [place("A", 0.8)]),
         ["p1"],
@@ -149,15 +149,14 @@ def test_option_evidence_cites_qloo_affinity_only_when_present():
     options = select_options(with_aff, 1)
     assert options
     labels = " ".join(options[0].evidence_labels)
-    assert "Qloo affinity signal" in labels
-    assert "project heuristic" in labels  # heuristic rank score still disclosed separately
-
-    # No affinity -> no fabricated affinity label.
-    no_aff = rank_candidates(
-        merge_candidate_batches({"p1": [place("A"), place("B")]}, [place("A")]), ["p1"], "City"
-    )
-    labels_no = " ".join(select_options(no_aff, 1)[0].evidence_labels)
-    assert "Qloo affinity signal" not in labels_no
+    # evidence_labels describe OUR calculation only (coverage + heuristic + verification).
+    assert "project heuristic" in labels
+    assert "coverage" in labels
+    # The affinity number must NOT be duplicated into evidence_labels (it is on the chip).
+    assert "Qloo affinity signal" not in labels
+    assert "0.8" not in labels
+    # The Qloo signal is still carried on the candidate for the chip to render.
+    assert options[0].candidate.qloo_affinity == 0.8
 
 
 def test_mock_candidates_have_no_affinity_and_keep_demo_status():
@@ -171,15 +170,13 @@ def test_mock_candidates_have_no_affinity_and_keep_demo_status():
 
 
 @pytest.mark.asyncio
-async def test_composer_mentions_affinity_only_when_real():
+async def test_composer_does_not_repeat_the_affinity_number():
+    # The affinity number is shown on the card chip, so the explanation must not repeat it.
     composer = DeterministicComposer()
-    with_aff = await composer.compose(
-        {"option_type": "shared_ground", "candidate": {"name": "Venue", "qloo_affinity": 0.87}}
+    out = await composer.compose(
+        {"option_type": "shared_ground",
+         "candidate": {"name": "Venue", "qloo_affinity": 0.87, "participant_ranks": {"p1": 1}}}
     )
-    assert "0.87" in with_aff["explanation"]
-    assert "separate from our group ranking" in with_aff["explanation"]
-
-    without = await composer.compose(
-        {"option_type": "shared_ground", "candidate": {"name": "Venue", "qloo_affinity": None}}
-    )
-    assert "affinity" not in without["explanation"].lower()
+    assert "0.87" not in out["explanation"]
+    assert "affinity" not in out["explanation"].lower()
+    assert "Venue" in out["explanation"]  # still names the candidate

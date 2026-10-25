@@ -79,9 +79,17 @@ export default function ResultsPanel({ result, participantCount, title, eyebrow,
                 )}
                 <span className="score-chip chip-coverage">{coverageText(option, participantCount)}</span>
               </div>
+
+              {option.candidate.matched_interests && option.candidate.matched_interests.length > 0 && (
+                <p className="qloo-link">
+                  <Zap size={12} /> Qloo linked this to{' '}
+                  <strong>{option.candidate.matched_interests.join(', ')}</strong>
+                </p>
+              )}
+
               <p className="score-note">
-                <strong>Qloo affinity</strong> is Qloo's cultural signal; <strong>Group-fit</strong> is our
-                ranking heuristic — not a probability of enjoyment.
+                <strong>Qloo affinity</strong> and the linked interests are Qloo's cultural signals;{' '}
+                <strong>Group-fit</strong> and coverage are our own calculation — not a probability of enjoyment.
               </p>
 
               {option.evidence_labels.length > 0 && (

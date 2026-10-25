@@ -26,6 +26,8 @@ export type Candidate = {
   // Qloo's own cultural affinity signal (0–1), present only for live Qloo results.
   // Distinct from `rank_score`, which is our group-fit heuristic.
   qloo_affinity?: number | null
+  // Verified interest names Qloo's explainability credited for this candidate.
+  matched_interests?: string[]
   group_coverage: number
   reasons: string[]
 }

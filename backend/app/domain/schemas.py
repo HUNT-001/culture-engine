@@ -69,6 +69,10 @@ class Candidate(BaseModel):
     # Highest Qloo affinity across participant queries, surfaced for traceability.
     # This is a Qloo signal, distinct from our heuristic `rank_score`.
     qloo_affinity: float | None = None
+    # Verified interest names that Qloo's explainability credited for this candidate.
+    # Populated only from exact entity-id matches to resolved interests — never guessed
+    # from a UUID. A Qloo-provided link, distinct from our coverage/ranking calculation.
+    matched_interests: list[str] = Field(default_factory=list)
     verification_status: Literal["unverified", "verified", "ambiguous", "demo"] = "unverified"
     maps_search_url: str | None = None
     rank_score: float = 0.0
