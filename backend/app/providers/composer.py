@@ -21,7 +21,15 @@ class DeterministicComposer:
             label = "Synthetic demo result only; this is not a real venue recommendation."
         if count:
             label += f" It appeared in {count} participant-specific ranking(s)."
-        return {"explanation": f"{label} Candidate: {name}."}
+        affinity = candidate.get("qloo_affinity")
+        affinity_note = ""
+        if isinstance(affinity, (int, float)) and not isinstance(affinity, bool):
+            # Report only the real Qloo signal; keep it separate from our ranking.
+            affinity_note = (
+                f" Qloo reported a cultural affinity signal of {affinity:.2f} "
+                "(Qloo's own measure, separate from our group ranking)."
+            )
+        return {"explanation": f"{label} Candidate: {name}.{affinity_note}"}
 
 
 class OpenAICompatibleComposer:

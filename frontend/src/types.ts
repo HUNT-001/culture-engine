@@ -18,10 +18,14 @@ export type Candidate = {
   address?: string | null
   source: 'qloo' | 'mock'
   participant_ranks: Record<string, number>
+  participant_affinities?: Record<string, number>
   combined_rank?: number | null
   verification_status: 'unverified' | 'verified' | 'ambiguous' | 'demo'
   maps_search_url?: string | null
   rank_score: number
+  // Qloo's own cultural affinity signal (0–1), present only for live Qloo results.
+  // Distinct from `rank_score`, which is our group-fit heuristic.
+  qloo_affinity?: number | null
   group_coverage: number
   reasons: string[]
 }

@@ -43,8 +43,14 @@ class Candidate(BaseModel):
     address: str | None = None
     source: Literal["qloo", "mock"] = "qloo"
     participant_ranks: dict[str, int] = Field(default_factory=dict)
+    # Raw Qloo-provided affinity per participant query (evidence, not our score). Only
+    # populated when the live API returns a numeric `query.affinity`; empty in mock mode.
+    participant_affinities: dict[str, float] = Field(default_factory=dict)
     combined_rank: int | None = None
     qloo_explanation: Any | None = None
+    # Highest Qloo affinity across participant queries, surfaced for traceability.
+    # This is a Qloo signal, distinct from our heuristic `rank_score`.
+    qloo_affinity: float | None = None
     verification_status: Literal["unverified", "verified", "ambiguous", "demo"] = "unverified"
     maps_search_url: str | None = None
     rank_score: float = 0.0
