@@ -35,3 +35,6 @@ outputs/
 
 # Python package metadata
 *.egg-info/
+
+# CommonThreadBench: never commit anything derived from live Qloo responses
+backend/bench/results/live/

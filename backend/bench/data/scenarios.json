@@ -1,0 +1,2678 @@
+{
+  "schema_version": "1.0",
+  "name": "CommonThreadBench v1 scenario dataset",
+  "provenance": "Hand-curated synthetic scenarios. No live Qloo response bodies, credentials or private data are embedded.",
+  "categories": [
+    "shared_tastes",
+    "conflicting_tastes",
+    "dominant_member",
+    "niche_vs_mainstream",
+    "cross_domain_bridge",
+    "ambiguous_resolution",
+    "constraints",
+    "sparse_and_failures"
+  ],
+  "category_titles": {
+    "shared_tastes": "Shared tastes",
+    "conflicting_tastes": "Strongly conflicting tastes",
+    "dominant_member": "Dominant-member bias",
+    "niche_vs_mainstream": "Niche versus mainstream interests",
+    "cross_domain_bridge": "Cross-domain cultural bridges",
+    "ambiguous_resolution": "Ambiguous entity resolution",
+    "constraints": "Budget, location and exclusion constraints",
+    "sparse_and_failures": "Sparse data and API failures"
+  },
+  "count": 48,
+  "scenarios": [
+    {
+      "id": "shared_tastes_01",
+      "category": "shared_tastes",
+      "title": "Two indie-music friends",
+      "location": "Chennai, Tamil Nadu, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Aarav",
+          "interests": [
+            "Radiohead",
+            "indie films"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Diya",
+          "interests": [
+            "Radiohead",
+            "specialty coffee"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Chennai, Tamil Nadu, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "Clear overlapping anchor (Radiohead) should surface shared-ground coverage."
+    },
+    {
+      "id": "shared_tastes_02",
+      "category": "shared_tastes",
+      "title": "Trio of coffee-and-art fans",
+      "location": "Bengaluru, Karnataka, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Meera",
+          "interests": [
+            "specialty coffee",
+            "contemporary art"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Rohan",
+          "interests": [
+            "specialty coffee",
+            "photography"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Kavya",
+          "interests": [
+            "specialty coffee",
+            "indie bookstores"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Bengaluru, Karnataka, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "shared_tastes_03",
+      "category": "shared_tastes",
+      "title": "Four board-game regulars",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Sam",
+          "interests": [
+            "board games",
+            "craft beer"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Nia",
+          "interests": [
+            "board games",
+            "ramen"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Leo",
+          "interests": [
+            "board games",
+            "stand-up comedy"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p4",
+          "display_name": "Ivy",
+          "interests": [
+            "board games",
+            "vinyl records"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "shared_tastes_04",
+      "category": "shared_tastes",
+      "title": "Two Ghibli-and-ramen friends",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Theo",
+          "interests": [
+            "Studio Ghibli",
+            "ramen"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Mia",
+          "interests": [
+            "Studio Ghibli",
+            "ramen"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "Near-identical tastes; expect strong shared-ground coverage."
+    },
+    {
+      "id": "shared_tastes_05",
+      "category": "shared_tastes",
+      "title": "Trio of jazz lovers",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Omar",
+          "interests": [
+            "live jazz",
+            "vinyl records"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Freya",
+          "interests": [
+            "live jazz",
+            "specialty coffee"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Jack",
+          "interests": [
+            "live jazz",
+            "craft beer"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "shared_tastes_06",
+      "category": "shared_tastes",
+      "title": "Four photography students",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Lena",
+          "interests": [
+            "photography",
+            "contemporary art"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Max",
+          "interests": [
+            "photography",
+            "street art"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Sofia",
+          "interests": [
+            "photography",
+            "indie films"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p4",
+          "display_name": "Jonas",
+          "interests": [
+            "photography",
+            "craft beer"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "conflicting_tastes_01",
+      "category": "conflicting_tastes",
+      "title": "Metal vs. classical",
+      "location": "Chennai, Tamil Nadu, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Vikram",
+          "interests": [
+            "heavy metal",
+            "retro arcades"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Anika",
+          "interests": [
+            "classical music",
+            "contemporary art"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Chennai, Tamil Nadu, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "Disjoint tastes; a labelled cultural bridge should only appear with real multi-profile evidence."
+    },
+    {
+      "id": "conflicting_tastes_02",
+      "category": "conflicting_tastes",
+      "title": "Nightlife vs. quiet",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Pia",
+          "interests": [
+            "techno clubs",
+            "craft beer"
+          ],
+          "dislikes": [
+            "quiet cafes"
+          ]
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Ben",
+          "interests": [
+            "indie bookstores",
+            "specialty coffee"
+          ],
+          "dislikes": [
+            "loud venues"
+          ]
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [
+          "loud venues"
+        ],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": true,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "conflicting_tastes_03",
+      "category": "conflicting_tastes",
+      "title": "Three incompatible trios",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Zoe",
+          "interests": [
+            "EDM festivals"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Hank",
+          "interests": [
+            "opera"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Ravi",
+          "interests": [
+            "competitive esports"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "conflicting_tastes_04",
+      "category": "conflicting_tastes",
+      "title": "Vegan vs. barbecue",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Tara",
+          "interests": [
+            "vegan food",
+            "yoga studios"
+          ],
+          "dislikes": [
+            "barbecue"
+          ]
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Cole",
+          "interests": [
+            "barbecue",
+            "craft beer"
+          ],
+          "dislikes": [
+            "vegan food"
+          ]
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "conflicting_tastes_05",
+      "category": "conflicting_tastes",
+      "title": "Four-way clash",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Ada",
+          "interests": [
+            "ballet"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Finn",
+          "interests": [
+            "punk rock"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Gia",
+          "interests": [
+            "fine dining"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p4",
+          "display_name": "Rex",
+          "interests": [
+            "skate parks"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "conflicting_tastes_06",
+      "category": "conflicting_tastes",
+      "title": "Highbrow vs. lowbrow",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Nora",
+          "interests": [
+            "art house cinema",
+            "wine bars"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Dev",
+          "interests": [
+            "comic conventions",
+            "fast food"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "dominant_member_01",
+      "category": "dominant_member",
+      "title": "One loud voice, two quiet",
+      "location": "Bengaluru, Karnataka, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Isha",
+          "interests": [
+            "specialty coffee",
+            "contemporary art",
+            "live jazz"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Arjun",
+          "interests": [
+            "cricket"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Nisha",
+          "interests": [
+            "street food"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Bengaluru, Karnataka, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ],
+        "fairness_watch_participant": "p2"
+      },
+      "notes": "p1 has the most interests; worst-member coverage must not collapse to zero silently."
+    },
+    {
+      "id": "dominant_member_02",
+      "category": "dominant_member",
+      "title": "Three interests vs one",
+      "location": "Chennai, Tamil Nadu, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Karthik",
+          "interests": [
+            "Radiohead",
+            "indie films",
+            "specialty coffee"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Lakshmi",
+          "interests": [
+            "temple architecture"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Chennai, Tamil Nadu, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "dominant_member_03",
+      "category": "dominant_member",
+      "title": "Dominant member, group of four",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Felix",
+          "interests": [
+            "techno clubs",
+            "street art",
+            "craft beer"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Mara",
+          "interests": [
+            "photography"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Jo",
+          "interests": [
+            "ramen"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p4",
+          "display_name": "Ell",
+          "interests": [
+            "indie bookstores"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ],
+        "fairness_watch_participant": "p4"
+      },
+      "notes": ""
+    },
+    {
+      "id": "dominant_member_04",
+      "category": "dominant_member",
+      "title": "Two dominant, one sparse",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Beau",
+          "interests": [
+            "craft beer",
+            "live music",
+            "barbecue"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Sky",
+          "interests": [
+            "craft beer",
+            "live music",
+            "food trucks"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Wren",
+          "interests": [
+            "quiet libraries"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ],
+        "fairness_watch_participant": "p3"
+      },
+      "notes": ""
+    },
+    {
+      "id": "dominant_member_05",
+      "category": "dominant_member",
+      "title": "Loud majority, group of three",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Ira",
+          "interests": [
+            "football pubs",
+            "street food",
+            "live jazz"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Ben",
+          "interests": [
+            "football pubs",
+            "street food"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Cal",
+          "interests": [
+            "museums"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ],
+        "fairness_watch_participant": "p3"
+      },
+      "notes": ""
+    },
+    {
+      "id": "dominant_member_06",
+      "category": "dominant_member",
+      "title": "Single anchor dominates",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Val",
+          "interests": [
+            "Taylor Swift",
+            "pop culture",
+            "dessert bars"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Gus",
+          "interests": [
+            "jazz history"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "niche_vs_mainstream_01",
+      "category": "niche_vs_mainstream",
+      "title": "Obscure vs. popular music",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Edda",
+          "interests": [
+            "Icelandic post-rock",
+            "experimental theatre"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Tom",
+          "interests": [
+            "Taylor Swift",
+            "blockbuster cinema"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "Niche interests may resolve sparsely; mainstream should resolve well."
+    },
+    {
+      "id": "niche_vs_mainstream_02",
+      "category": "niche_vs_mainstream",
+      "title": "Underground vs. chart",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Rune",
+          "interests": [
+            "noise music",
+            "zine culture"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Lara",
+          "interests": [
+            "pop radio",
+            "mainstream clubs"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Odin",
+          "interests": [
+            "techno clubs"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "niche_vs_mainstream_03",
+      "category": "niche_vs_mainstream",
+      "title": "Specialty hobby vs broad",
+      "location": "Bengaluru, Karnataka, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Priya",
+          "interests": [
+            "Carnatic fusion",
+            "letterpress printing"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Sid",
+          "interests": [
+            "Bollywood",
+            "street food"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Bengaluru, Karnataka, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "niche_vs_mainstream_04",
+      "category": "niche_vs_mainstream",
+      "title": "Cult film vs multiplex",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Juno",
+          "interests": [
+            "avant-garde film",
+            "vinyl records"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Cam",
+          "interests": [
+            "Marvel films",
+            "arcade bars"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Remy",
+          "interests": [
+            "board games"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p4",
+          "display_name": "Suki",
+          "interests": [
+            "Studio Ghibli"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "niche_vs_mainstream_05",
+      "category": "niche_vs_mainstream",
+      "title": "Rare cuisine vs familiar",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Pax",
+          "interests": [
+            "Ethiopian cuisine",
+            "natural wine"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Deb",
+          "interests": [
+            "burgers",
+            "sports bars"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "niche_vs_mainstream_06",
+      "category": "niche_vs_mainstream",
+      "title": "Deep-cut vs greatest-hits",
+      "location": "Chennai, Tamil Nadu, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Nila",
+          "interests": [
+            "independent documentary",
+            "slam poetry"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Vijay",
+          "interests": [
+            "A.R. Rahman",
+            "multiplex cinema"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Asha",
+          "interests": [
+            "specialty coffee"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Chennai, Tamil Nadu, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "cross_domain_bridge_01",
+      "category": "cross_domain_bridge",
+      "title": "Anime fan meets jazz fan",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Kenji",
+          "interests": [
+            "anime",
+            "ramen"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Gloria",
+          "interests": [
+            "live jazz",
+            "vinyl records"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "A defensible bridge needs genuine multi-profile provenance; otherwise label neutral."
+    },
+    {
+      "id": "cross_domain_bridge_02",
+      "category": "cross_domain_bridge",
+      "title": "Gamer and gallery-goer",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Mika",
+          "interests": [
+            "video games",
+            "retro arcades"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Elsa",
+          "interests": [
+            "contemporary art",
+            "photography"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "cross_domain_bridge_03",
+      "category": "cross_domain_bridge",
+      "title": "Food, film and music trio",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Ravi",
+          "interests": [
+            "street food"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Beth",
+          "interests": [
+            "indie films"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Sol",
+          "interests": [
+            "live jazz"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "cross_domain_bridge_04",
+      "category": "cross_domain_bridge",
+      "title": "Literature meets gaming",
+      "location": "Bengaluru, Karnataka, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Tanvi",
+          "interests": [
+            "indie bookstores",
+            "slam poetry"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Yash",
+          "interests": [
+            "video games",
+            "board games"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Bengaluru, Karnataka, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "cross_domain_bridge_05",
+      "category": "cross_domain_bridge",
+      "title": "Four cross-domain tastes",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Cleo",
+          "interests": [
+            "craft beer"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Drew",
+          "interests": [
+            "photography"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Fay",
+          "interests": [
+            "live music"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p4",
+          "display_name": "Gil",
+          "interests": [
+            "board games"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "cross_domain_bridge_06",
+      "category": "cross_domain_bridge",
+      "title": "Fashion meets film",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Uma",
+          "interests": [
+            "vintage fashion",
+            "photography"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Nico",
+          "interests": [
+            "art house cinema",
+            "specialty coffee"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "ambiguous_resolution_01",
+      "category": "ambiguous_resolution",
+      "title": "Phoenix the band, not the city",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Remi",
+          "interests": [
+            "Phoenix",
+            "specialty coffee"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Jade",
+          "interests": [
+            "indie films"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {
+        "Phoenix": "artist:phoenix-band"
+      },
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "'Phoenix' resolves to a city first; intended entity is the band."
+    },
+    {
+      "id": "ambiguous_resolution_02",
+      "category": "ambiguous_resolution",
+      "title": "Titanic the film",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Oak",
+          "interests": [
+            "Titanic",
+            "live jazz"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Sage",
+          "interests": [
+            "photography"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {
+        "Titanic": "movie:titanic-1997"
+      },
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "ambiguous_resolution_03",
+      "category": "ambiguous_resolution",
+      "title": "Interpol the band",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Lux",
+          "interests": [
+            "Interpol",
+            "craft beer"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Wim",
+          "interests": [
+            "contemporary art"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Ada",
+          "interests": [
+            "vinyl records"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {
+        "Interpol": "artist:interpol-band"
+      },
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "ambiguous_resolution_04",
+      "category": "ambiguous_resolution",
+      "title": "Pulp: band vs film",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Cass",
+          "interests": [
+            "Pulp",
+            "indie bookstores"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Bram",
+          "interests": [
+            "street food"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {
+        "Pulp": "artist:pulp-band"
+      },
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "ambiguous_resolution_05",
+      "category": "ambiguous_resolution",
+      "title": "Prince the artist",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Dove",
+          "interests": [
+            "Prince",
+            "vinyl records"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Hal",
+          "interests": [
+            "barbecue"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Zed",
+          "interests": [
+            "live music"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {
+        "Prince": "artist:prince"
+      },
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "ambiguous_resolution_06",
+      "category": "ambiguous_resolution",
+      "title": "Nirvana the band",
+      "location": "Chennai, Tamil Nadu, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Sena",
+          "interests": [
+            "Nirvana",
+            "specialty coffee"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Tara",
+          "interests": [
+            "indie films"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Chennai, Tamil Nadu, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {
+        "Nirvana": "artist:nirvana-band"
+      },
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "constraints_01",
+      "category": "constraints",
+      "title": "Tight budget cap",
+      "location": "Chennai, Tamil Nadu, India",
+      "budget_per_person": 300,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Ira",
+          "interests": [
+            "specialty coffee",
+            "live jazz"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Ved",
+          "interests": [
+            "street food",
+            "indie films"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": 300,
+        "exclusions": [],
+        "location_locked": "Chennai, Tamil Nadu, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": true,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "All displayed options must satisfy the per-person budget."
+    },
+    {
+      "id": "constraints_02",
+      "category": "constraints",
+      "title": "Explicit dislike exclusion",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Lia",
+          "interests": [
+            "craft beer",
+            "live music"
+          ],
+          "dislikes": [
+            "loud venues"
+          ]
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Ron",
+          "interests": [
+            "photography"
+          ],
+          "dislikes": [
+            "loud venues"
+          ]
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [
+          "loud venues"
+        ],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": true,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "constraints_03",
+      "category": "constraints",
+      "title": "Budget and exclusion together",
+      "location": "London, UK",
+      "budget_per_person": 500,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Nel",
+          "interests": [
+            "contemporary art",
+            "specialty coffee"
+          ],
+          "dislikes": [
+            "alcohol"
+          ]
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Sid",
+          "interests": [
+            "indie bookstores"
+          ],
+          "dislikes": [
+            "alcohol"
+          ]
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Ava",
+          "interests": [
+            "photography"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": 500,
+        "exclusions": [
+          "bars",
+          "alcohol"
+        ],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": true,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "constraints_04",
+      "category": "constraints",
+      "title": "Very high budget, no exclusion",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": 5000,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Rex",
+          "interests": [
+            "fine dining",
+            "live jazz"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Mo",
+          "interests": [
+            "wine bars"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": 5000,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": true,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": "High budget should not over-constrain; most candidates remain feasible."
+    },
+    {
+      "id": "constraints_05",
+      "category": "constraints",
+      "title": "Exclusion removes all candidates",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Pat",
+          "interests": [
+            "craft beer",
+            "sports bars"
+          ],
+          "dislikes": [
+            "bars",
+            "alcohol",
+            "nightlife"
+          ]
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Lee",
+          "interests": [
+            "live music"
+          ],
+          "dislikes": [
+            "bars",
+            "alcohol",
+            "nightlife"
+          ]
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [
+          "bars",
+          "alcohol",
+          "nightlife",
+          "loud venues"
+        ],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": true,
+        "expect_status_in": [
+          "partial",
+          "failed"
+        ],
+        "expect_empty_feasible_set": true
+      },
+      "notes": "Intended to produce an empty feasible set after exclusions."
+    },
+    {
+      "id": "constraints_06",
+      "category": "constraints",
+      "title": "Location locked to small locality",
+      "location": "Pondicherry, India",
+      "budget_per_person": 700,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Guru",
+          "interests": [
+            "specialty coffee",
+            "photography"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Hema",
+          "interests": [
+            "indie films"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": 700,
+        "exclusions": [],
+        "location_locked": "Pondicherry, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": true,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "sparse_and_failures_01",
+      "category": "sparse_and_failures",
+      "title": "All interests unresolvable",
+      "location": "Reykjavik, Iceland",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Ymir",
+          "interests": [
+            "zzqqxx nonexistent genre"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Freyr",
+          "interests": [
+            "another made-up interest"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Reykjavik, Iceland"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [
+        "zzqqxx nonexistent genre",
+        "another made-up interest"
+      ],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "partial",
+          "failed"
+        ],
+        "expect_unresolved": true
+      },
+      "notes": ""
+    },
+    {
+      "id": "sparse_and_failures_02",
+      "category": "sparse_and_failures",
+      "title": "One participant sparse",
+      "location": "Chennai, Tamil Nadu, India",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Anu",
+          "interests": [
+            "Radiohead",
+            "specialty coffee"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Bala",
+          "interests": [
+            "obscure-unresolvable-thing"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Chennai, Tamil Nadu, India"
+      },
+      "fault_injection": null,
+      "unresolvable_interests": [
+        "obscure-unresolvable-thing"
+      ],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "complete",
+          "partial",
+          "failed"
+        ],
+        "expect_unresolved": true
+      },
+      "notes": ""
+    },
+    {
+      "id": "sparse_and_failures_03",
+      "category": "sparse_and_failures",
+      "title": "Qloo timeout on insights",
+      "location": "Berlin, Germany",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Cato",
+          "interests": [
+            "techno clubs",
+            "street art"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Dag",
+          "interests": [
+            "photography"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Berlin, Germany"
+      },
+      "fault_injection": {
+        "type": "timeout",
+        "at": "insights"
+      },
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "partial",
+          "failed"
+        ],
+        "expect_warning_contains": "limited"
+      },
+      "notes": ""
+    },
+    {
+      "id": "sparse_and_failures_04",
+      "category": "sparse_and_failures",
+      "title": "Qloo rate limit",
+      "location": "London, UK",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Edy",
+          "interests": [
+            "live jazz"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Fia",
+          "interests": [
+            "craft beer"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p3",
+          "display_name": "Gad",
+          "interests": [
+            "indie films"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "London, UK"
+      },
+      "fault_injection": {
+        "type": "rate_limit",
+        "at": "insights"
+      },
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "partial",
+          "failed"
+        ],
+        "expect_warning_contains": "limited"
+      },
+      "notes": ""
+    },
+    {
+      "id": "sparse_and_failures_05",
+      "category": "sparse_and_failures",
+      "title": "Qloo invalid JSON",
+      "location": "Austin, Texas, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Hari",
+          "interests": [
+            "board games"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Isa",
+          "interests": [
+            "ramen"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Austin, Texas, USA"
+      },
+      "fault_injection": {
+        "type": "invalid_response",
+        "at": "insights"
+      },
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "partial",
+          "failed"
+        ]
+      },
+      "notes": ""
+    },
+    {
+      "id": "sparse_and_failures_06",
+      "category": "sparse_and_failures",
+      "title": "Auth error during search",
+      "location": "Brooklyn, New York, USA",
+      "budget_per_person": null,
+      "participants": [
+        {
+          "participant_id": "p1",
+          "display_name": "Jun",
+          "interests": [
+            "anime",
+            "ramen"
+          ],
+          "dislikes": []
+        },
+        {
+          "participant_id": "p2",
+          "display_name": "Kai",
+          "interests": [
+            "vinyl records"
+          ],
+          "dislikes": []
+        }
+      ],
+      "constraints": {
+        "budget_per_person": null,
+        "exclusions": [],
+        "location_locked": "Brooklyn, New York, USA"
+      },
+      "fault_injection": {
+        "type": "auth_error",
+        "at": "search"
+      },
+      "unresolvable_interests": [],
+      "ambiguous_interests": {},
+      "expected_properties": {
+        "deterministic": true,
+        "participant_order_invariant": true,
+        "interest_order_invariant": true,
+        "no_bridge_without_multiprofile_evidence": true,
+        "no_unsupported_named_interest_explanations": true,
+        "options_labelled_demo_in_mock_mode": true,
+        "hard_constraints_must_hold": false,
+        "expect_status_in": [
+          "failed",
+          "partial"
+        ],
+        "expect_provider_error": true
+      },
+      "notes": ""
+    }
+  ]
+}
