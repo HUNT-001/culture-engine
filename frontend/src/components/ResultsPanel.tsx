@@ -1,6 +1,8 @@
 import { ArrowUpRight, Info, Zap } from 'lucide-react'
 import type { RecommendationResponse } from '../types'
-import { coverageText, formatScore, hasRecommendations, optionName, sourceBadge } from '../lib/results'
+import {
+  confirmationGroups, coverageText, formatScore, hasRecommendations, optionName, sourceBadge, statusNotice,
+} from '../lib/results'
 
 type Props = {
   result: RecommendationResponse
@@ -15,6 +17,8 @@ type Props = {
  *  Renders only data the backend actually returned — no fabricated details. */
 export default function ResultsPanel({ result, participantCount, title, eyebrow, onReset, resetLabel }: Props) {
   const badge = sourceBadge(result)
+  const notice = statusNotice(result)
+  const unconfirmed = confirmationGroups(result)
   return (
     <div className="results-panel">
       <div className="results-heading">
@@ -33,19 +37,34 @@ export default function ResultsPanel({ result, participantCount, title, eyebrow,
       </div>
 
       {result.warnings.map((warning, i) => <p className="warning" key={`w-${i}`}>{warning}</p>)}
-      {result.unresolved_interests.length > 0 && (
-        <p className="warning">
-          We couldn't confidently match these interests to Qloo, so they were left out:{' '}
-          <strong>{result.unresolved_interests.join(', ')}</strong>. Try a more specific or better-known name.
+      {notice && (
+        <p className="warning" role="status" data-status={notice.tone}>
+          <strong>{notice.title}.</strong> {notice.detail}
         </p>
+      )}
+      {unconfirmed.length > 0 && (
+        <div className="warning" role="status">
+          <p>
+            Not confirmed to a specific Qloo entity, so left out of this result. Search and pick the
+            entity you mean for each, then run again:
+          </p>
+          <ul>
+            {unconfirmed.map((g) => (
+              <li key={g.name || g.terms.join('|')}>
+                {g.name && <strong>{g.name}: </strong>}{g.terms.join(', ')}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {!hasRecommendations(result) ? (
         <div className="empty-results">
           <h3>No group recommendations yet.</h3>
           <p className="helper">
-            The backend returned no usable options (status: {result.status}). Try broader or more mainstream
-            interests, or a larger city.
+            {unconfirmed.length > 0
+              ? `No interest was confirmed to a specific Qloo entity (status: ${result.status}).`
+              : `The backend returned no usable options (status: ${result.status}). Try broader or more mainstream interests, or a larger city.`}
           </p>
         </div>
       ) : (

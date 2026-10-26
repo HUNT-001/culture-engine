@@ -40,6 +40,13 @@ export type RecommendationOption = {
   evidence_labels: string[]
 }
 
+// An interest excluded from a run because no Qloo entity was explicitly confirmed for it.
+export type UnconfirmedInterest = {
+  participant_id: string
+  display_name: string
+  text: string
+}
+
 export type RecommendationResponse = {
   run_id: string
   demo_mode: boolean
@@ -47,6 +54,7 @@ export type RecommendationResponse = {
   options: RecommendationOption[]
   warnings: string[]
   unresolved_interests: string[]
+  needs_confirmation: UnconfirmedInterest[]
   status: 'complete' | 'partial' | 'failed'
 }
 

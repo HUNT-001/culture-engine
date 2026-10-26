@@ -11,8 +11,10 @@ async def test_mock_workflow_returns_labeled_synthetic_options():
     request = RecommendationRequest.model_validate({
         "location": "Chennai, Tamil Nadu, India",
         "participants": [
-            {"participant_id": "p1", "display_name": "A", "interests": ["indie rock", "anime"]},
-            {"participant_id": "p2", "display_name": "B", "interests": ["coffee", "illustration"]},
+            {"participant_id": "p1", "display_name": "A", "interests": ["indie rock", "anime"],
+             "resolved_interests": confirmed("indie rock", "anime")},
+            {"participant_id": "p2", "display_name": "B", "interests": ["coffee", "illustration"],
+             "resolved_interests": confirmed("coffee", "illustration")},
         ],
     })
     state = await graph.ainvoke({"request": request.model_dump()})
@@ -32,8 +34,15 @@ class FixedQloo:
         return [Candidate(entity_id=f"demo:place:{i}", name=n, source="mock") for i, n in enumerate(names)]
 
 
+def confirmed(*terms):
+    """Interests the user explicitly confirmed in the picker (synthetic demo entity ids)."""
+    return [{"text": t, "entity_id": f"demo:interest:{t.lower().replace(' ', '-')}", "name": t,
+             "entity_type": "demo"} for t in terms]
+
+
 def group(*people, budget=None):
-    payload = {"location": "Bengaluru, Karnataka, India", "participants": list(people)}
+    people = [{"resolved_interests": confirmed(*p["interests"]), **p} for p in people]
+    payload = {"location": "Bengaluru, Karnataka, India", "participants": people}
     if budget:
         payload["budget_per_person"] = budget
     return RecommendationRequest.model_validate(payload).model_dump()

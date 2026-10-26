@@ -34,6 +34,7 @@ async def execute_workflow(runtime: dict, request: RecommendationRequest) -> Rec
         options=options,
         warnings=result.get("warnings", []),
         unresolved_interests=result.get("unresolved_interests", []),
+        needs_confirmation=result.get("needs_confirmation", []),
         status=status,
     )
 

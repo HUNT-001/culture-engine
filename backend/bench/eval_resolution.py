@@ -7,6 +7,11 @@ lists are author-written, so they say nothing about Qloo's real search quality).
 
 Nothing here encodes the *expected* production behaviour; it observes what production does
 and compares it with the independently recorded intended entity.
+
+Policy under test (resolution safety fix): production binds ONLY user-confirmed entities. A
+phrase submitted as typed must abstain (and is never searched), even when a result's name
+matches exactly. ``run_case`` submits each gold case as the gold defines it; ``confirm_case``
+simulates the picker, in which the user explicitly chooses an entity from the candidates.
 """
 from __future__ import annotations
 
@@ -20,24 +25,28 @@ from bench.world import build_gold_world
 CONTROL = "jazz"
 
 
-def _payload(case: dict) -> dict:
+def _payload(case: dict, choose: str | None = None) -> dict:
+    """Request body for one gold case. ``choose`` = entity id the simulated user picks."""
     p1: dict = {"participant_id": "p1", "display_name": "A", "interests": [case["query"]]}
-    conf = case.get("user_confirmation")
+    conf = {"entity_id": choose} if choose else case.get("user_confirmation")
+    p2 = {"participant_id": "p2", "display_name": "B", "interests": [CONTROL]}
     if conf:
         ent = next(c for c in case["candidates"] if c["entity_id"] == conf["entity_id"])
         p1["resolved_interests"] = [{
             "text": case["query"], "entity_id": ent["entity_id"], "name": ent["name"],
             "entity_type": ent["types"][0],
         }]
-    return {
-        "location": "Test City",
-        "participants": [p1, {"participant_id": "p2", "display_name": "B", "interests": [CONTROL]}],
-    }
+    return {"location": "Test City", "participants": [p1, p2]}
 
 
-def classify(case: dict, resolved_entity_id: str | None) -> str:
-    """Map the observed resolved entity id to an outcome (independent of production code)."""
-    confirmed = case.get("user_confirmation") is not None
+def classify(case: dict, resolved_entity_id: str | None, confirmed: bool | None = None) -> str:
+    """Map the observed resolved entity id to an outcome (independent of production code).
+
+    ``confirmed``: whether the submitted request carried the user's confirmation for this
+    phrase (default: whatever the gold case itself specifies).
+    """
+    if confirmed is None:
+        confirmed = case.get("user_confirmation") is not None
     intended = case["intended"]["entity_id"] if case["intended"] else None
     if resolved_entity_id is None:
         return G.ABSTAIN
@@ -47,12 +56,14 @@ def classify(case: dict, resolved_entity_id: str | None) -> str:
     return G.AUTO_CORRECT if ok else G.AUTO_WRONG
 
 
-def run_case(case: dict) -> dict:
-    run = run_workflow_sync(_payload(case), build_gold_world(case), scenario_id=case["case_id"])
+def run_case(case: dict, choose: str | None = None) -> dict:
+    # The control phrase is submitted as typed: the simulated user confirms nothing for it.
+    run = run_workflow_sync(_payload(case, choose), build_gold_world(case),
+                            scenario_id=case["case_id"], confirm=False)
     typed = case["query"].strip()
     entry = next((e for e in run.resolved_profiles.get("p1", []) if e["input"] == typed), None)
     resolved_id = entry["entity_id"] if entry else None
-    outcome = classify(case, resolved_id)
+    outcome = classify(case, resolved_id, confirmed=bool(choose or case['user_confirmation']))
     searched = [q.strip().casefold() for q in run.mock.searched_queries()]
     return {
         "case_id": case["case_id"],
@@ -68,8 +79,17 @@ def run_case(case: dict) -> dict:
         "resolved_entity_type": entry["entity_type"] if entry else None,
         "searched_for_query": typed.casefold() in searched,
         "listed_unresolved": any(case["query"].strip() in u for u in run.unresolved),
+        "needs_confirmation": [u["text"] for u in run.state.get("needs_confirmation", [])
+                               if u["participant_id"] == "p1"],
         "qloo_requests": run.mock.count(),
+        "search_requests": run.mock.count("search"),
     }
+
+
+def confirm_case(case: dict, choose: str | None = None) -> dict:
+    """Simulate the picker: the user explicitly picks ``choose`` (default: the intended one)."""
+    entity_id = choose or case["intended"]["entity_id"]
+    return run_case(case, choose=entity_id)
 
 
 def _split_of(case_row: dict, dev_ids: set[str]) -> str:
@@ -107,8 +127,10 @@ def evaluate() -> dict:
 
     ambiguous = [r for r in rows if r["kind"].startswith("exact_homonym")]
     fidelity = [candidate_fidelity(c) for c in gold if c["candidates"]]
-    unconfirmed_searched = [r for r in rows if not r["user_confirmed"]]
+    unconfirmed_rows = [r for r in rows if not r["user_confirmed"]]
     confirmed_rows = [r for r in rows if r["user_confirmed"]]
+    # Every case with an intended entity, confirmed through the (simulated) picker.
+    picked = [confirm_case(c) for c in gold if c["intended"] and c["candidates"]]
     cand_cases = [{"candidates": [{"entity_id": c["entity_id"]} for c in g["candidates"]],
                    "gold_entity_id": g["intended"]["entity_id"]}
                   for g in gold if g["intended"] and g["candidates"]]
@@ -127,7 +149,18 @@ def evaluate() -> dict:
             "never_searched": all(not r["searched_for_query"] for r in confirmed_rows),
             "all_correct": all(r["outcome"] == G.CONFIRMED_CORRECT for r in confirmed_rows),
         },
-        "unconfirmed_always_searched": all(r["searched_for_query"] for r in unconfirmed_searched),
+        "unconfirmed_path": {
+            "n": len(unconfirmed_rows),
+            "never_searched": all(not r["searched_for_query"] for r in unconfirmed_rows),
+            "always_abstain": all(r["outcome"] == G.ABSTAIN for r in unconfirmed_rows),
+            "always_asks_user": all(r["needs_confirmation"] for r in unconfirmed_rows),
+            "no_qloo_request": all(r["qloo_requests"] == 0 for r in unconfirmed_rows),
+        },
+        "picker_confirmed_path": {
+            "n": len(picked),
+            "all_correct": all(r["outcome"] == G.CONFIRMED_CORRECT for r in picked),
+            "never_searched": all(not r["searched_for_query"] for r in picked),
+        },
         "candidate_fidelity": {
             "provenance": MOCKED_INTEGRATION,
             "cases": fidelity,

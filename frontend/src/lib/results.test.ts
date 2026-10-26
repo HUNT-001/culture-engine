@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { RecommendationOption, RecommendationResponse } from '../types'
 import {
-  coverageText, formatScore, hasRecommendations, isLive, optionName, sourceBadge,
+  confirmationGroups, coverageText, formatScore, hasRecommendations, isLive, optionName, sourceBadge,
+  statusNotice,
 } from './results'
 
 function option(partial: Partial<RecommendationOption['candidate']> = {}): RecommendationOption {
@@ -21,7 +22,7 @@ function option(partial: Partial<RecommendationOption['candidate']> = {}): Recom
 function response(partial: Partial<RecommendationResponse> = {}): RecommendationResponse {
   return {
     run_id: 'r1', demo_mode: false, location: 'Austin', options: [option()],
-    warnings: [], unresolved_interests: [], status: 'complete', ...partial,
+    warnings: [], unresolved_interests: [], needs_confirmation: [], status: 'complete', ...partial,
   }
 }
 
@@ -60,5 +61,46 @@ describe('result helpers', () => {
   it('coverageText reads real coverage without inventing totals', () => {
     expect(coverageText(option({ group_coverage: 1 }), 3)).toBe('Appears in 1/3 participant result set')
     expect(coverageText(option({ group_coverage: 2 }), 3)).toBe('Appears in 2/3 participant result sets')
+  })
+})
+
+describe('unconfirmed interests and run status', () => {
+  const left = [
+    { participant_id: 'p1', display_name: 'Ana', text: 'Phoenix' },
+    { participant_id: 'p1', display_name: 'Ana', text: 'jazz' },
+    { participant_id: 'p2', display_name: 'Ben', text: 'Pulp' },
+  ]
+
+  it('groups needs_confirmation by person, in order', () => {
+    expect(confirmationGroups(response({ needs_confirmation: left }))).toEqual([
+      { name: 'Ana', terms: ['Phoenix', 'jazz'] },
+      { name: 'Ben', terms: ['Pulp'] },
+    ])
+  })
+
+  it('falls back to the older "Name: term" strings, and tolerates a missing field', () => {
+    const old = response({ unresolved_interests: ['Ana: Phoenix'] }) as Partial<RecommendationResponse>
+    delete old.needs_confirmation
+    expect(confirmationGroups(old as RecommendationResponse)).toEqual([{ name: 'Ana', terms: ['Phoenix'] }])
+    expect(confirmationGroups(response())).toEqual([])
+  })
+
+  it('a complete run that left nothing out has no notice', () => {
+    expect(statusNotice(response())).toBeNull()
+  })
+
+  it('a partial run is labelled partial, and says why when interests were left out', () => {
+    expect(statusNotice(response({ status: 'partial' }))?.tone).toBe('partial')
+    const n = statusNotice(response({ status: 'partial', needs_confirmation: left }))
+    expect(n?.detail).toMatch(/not confirmed/)
+  })
+
+  it('never reports a run that left interests out as complete, whatever its status says', () => {
+    expect(statusNotice(response({ status: 'complete', needs_confirmation: left }))?.tone).toBe('partial')
+  })
+
+  it('a run with no options is a failure notice, even if the status says otherwise', () => {
+    expect(statusNotice(response({ status: 'failed', options: [], needs_confirmation: left }))?.tone).toBe('failed')
+    expect(statusNotice(response({ status: 'complete', options: [] }))?.tone).toBe('failed')
   })
 })

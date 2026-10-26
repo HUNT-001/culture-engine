@@ -3,32 +3,18 @@
 Resolution correctness rule:
 - A user-*confirmed* interest (one the UI resolved to a specific Qloo entity) is used as-is
   and never re-resolved.
-- An *unconfirmed* typed interest is auto-accepted only when a Qloo search result's name
-  matches the typed text exactly after normalization. A non-exact or ambiguous result is
-  left unresolved for the user to confirm, rather than silently taking the first result.
+- An *unconfirmed* typed interest is never bound to an entity by the server: not by taking
+  the first search result and not by an exact-name match (the same name can denote several
+  entities of different types). It is excluded and reported so the user can confirm one.
 """
 from typing import Any
 
 
 def normalize_name(value: str) -> str:
-    """Casefold, trim and collapse whitespace for exact-name comparison."""
+    """Casefold, trim and collapse whitespace for name comparison."""
     if not isinstance(value, str):
         return ""
     return " ".join(value.strip().casefold().split())
-
-
-def exact_match(term: str, matches: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """First candidate whose normalized name equals the normalized term, else None."""
-    target = normalize_name(term)
-    if not target:
-        return None
-    for match in matches:
-        if not isinstance(match, dict):
-            continue
-        name = match.get("name")
-        if isinstance(name, str) and normalize_name(name) == target:
-            return match
-    return None
 
 
 def confirmed_index(resolved_interests: list[Any]) -> dict[str, dict[str, str]]:

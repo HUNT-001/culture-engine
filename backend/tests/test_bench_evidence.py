@@ -17,7 +17,7 @@ import pytest
 
 from bench import eval_evidence as EE
 from bench.qloo_shape import EXPLAINABILITY_KEY, QlooMock, build_client
-from bench.runner import run_demo_mode, run_scenario, run_workflow_sync
+from bench.runner import run_demo_mode, run_scenario, run_workflow_sync, with_user_confirmation
 from bench.scenarios import load_scenarios, scenarios_by_id
 from bench.testing import no_network  # noqa: F401
 from bench.world import build_world
@@ -42,7 +42,8 @@ def _run_with_transform(fn, scenario=S):
     client = build_client(mock)
     graph = build_recommendation_graph(client, DeterministicComposer(), demo_mode=False,
                                        max_calls=5)
-    state = asyncio.run(graph.ainvoke({"request": copy.deepcopy(scenario.request_payload())}))
+    payload = with_user_confirmation(scenario.request_payload(), world)
+    state = asyncio.run(graph.ainvoke({"request": copy.deepcopy(payload)}))
     asyncio.run(client.close())
     return state, mock, world
 

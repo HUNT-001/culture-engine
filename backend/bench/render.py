@@ -73,15 +73,29 @@ def render_markdown(res: dict) -> str:
         w(f"| {name} | {_r(s['false_auto_confirmation'])} | {_r(s['auto_confirmation_precision'])}"
           f" | {_r(s['abstain_rate'])} | {_r(s['unacceptable_outcome_rate'])} |")
     w("")
+    w("> **How to read this table.** It is a *policy* result, not an accuracy result. "
+      "Production now binds nothing the user has not explicitly confirmed, so false automatic "
+      "confirmation is 0 by construction and automatic-acceptance coverage is 0 "
+      "(every unconfirmed phrase abstains and needs the user). It does **not** show that "
+      "entity resolution is accurate: correctness now rests on the user choosing from "
+      "Qloo's candidate list, whether the intended entity is *in* that list on the live "
+      "service is unmeasured (live Recall@5 pending), a phrase with no candidate can never "
+      "be confirmed, and the gold here is synthetic.")
+    w("")
     w("| Case | Kind | Outcome | Acceptable |")
     w("|---|---|---|---|")
     for c in er["cases"]:
         ok = "yes" if c["acceptable"] else "**NO**"
         w(f"| `{c['case_id']}` | {c['kind']} | {c['outcome']} | {ok} |")
     w("")
-    cp = er["confirmed_path"]
+    cp, up, pk = er["confirmed_path"], er["unconfirmed_path"], er["picker_confirmed_path"]
+    w(f"- Phrases submitted as typed (n={up['n']}): never searched **{up['never_searched']}**, "
+      f"never bound (always abstain) **{up['always_abstain']}**, user asked to confirm "
+      f"**{up['always_asks_user']}**, zero Qloo requests **{up['no_qloo_request']}**.")
     w(f"- User-confirmed overlay bypasses search: **{cp['never_searched']}**; "
-      f"resolves to the intended entity: **{cp['all_correct']}** (n={cp['n']}).")
+      f"resolves to the intended entity: **{cp['all_correct']}** (n={cp['n']}). Every case "
+      f"with an intended entity, confirmed through the simulated picker: resolves to the "
+      f"chosen entity **{pk['all_correct']}** (n={pk['n']}).")
     w(f"- Gold entity id/type/disambiguation survive adapter + `/api/entities/search` unchanged: "
       f"**{er['candidate_fidelity']['all_ok']}**.")
     cl = er["candidate_list_metrics"]

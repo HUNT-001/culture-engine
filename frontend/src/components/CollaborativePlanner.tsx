@@ -9,7 +9,8 @@ import {
 import type { PlanView, RecommendationResponse } from '../types'
 import { normalizeInterests } from '../lib/plan'
 import {
-  buildInterestPayload, newRow, rowsFromSaved, validateInterestRows, type InterestRow,
+  buildInterestPayload, newRow, rowsFromSaved, unconfirmedSavedInterests, validateInterestRows,
+  type InterestRow,
 } from '../lib/interests'
 import { clearSession, loadSession, saveSession, type DeviceSession } from '../lib/session'
 import { cleanCode, formatInviteText, hoursUntil, validateJoinInput } from '../lib/invite'
@@ -195,6 +196,13 @@ export default function CollaborativePlanner({ onMode }: Props) {
     : undefined
   const readyCount = plan ? plan.participants.filter((p) => p.has_preferences).length : 0
   const canGenerate = readyCount >= 2
+  // Saved interests nobody has confirmed to a Qloo entity: the server leaves them out of a run.
+  const pendingConfirmation = plan
+    ? plan.participants
+      .filter((p) => p.has_preferences)
+      .map((p) => ({ name: p.display_name, terms: unconfirmedSavedInterests(p.interests, p.resolved_interests) }))
+      .filter((p) => p.terms.length > 0)
+    : []
   const latest = runResult ?? plan?.latest_recommendation ?? null
 
   // --- Expired state ---
@@ -367,6 +375,13 @@ export default function CollaborativePlanner({ onMode }: Props) {
               {readyCount}/{plan.participants.length} participant(s) have added interests.
               {canGenerate ? ' Ready to generate.' : ' At least two are needed before generating.'}
             </p>
+            {pendingConfirmation.length > 0 && (
+              <p className="warning" role="status">
+                Not yet confirmed to a Qloo entity, so they would be left out:{' '}
+                {pendingConfirmation.map((p) => `${p.name}: ${p.terms.join(', ')}`).join('; ')}.
+                Each person confirms their own interests by updating their preferences.
+              </p>
+            )}
             <button className="submit-button" type="button" onClick={handleGenerate} disabled={busy || !canGenerate}>
               {busy ? <><LoaderCircle className="spinner" size={17} /> Working…</> : <>Generate group recommendations <ArrowUpRight size={17} /></>}
             </button>
@@ -399,7 +414,13 @@ export default function CollaborativePlanner({ onMode }: Props) {
                       {session.participant?.participantId === p.participant_id && <em> (you)</em>}
                     </span>
                     {p.has_preferences
-                      ? <span className="chip-ready"><Check size={12} /> {p.interests.join(', ')}</span>
+                      ? (
+                        <span className="chip-ready">
+                          <Check size={12} /> {p.interests.join(', ')}
+                          {unconfirmedSavedInterests(p.interests, p.resolved_interests).length > 0 &&
+                            <em> · needs confirmation</em>}
+                        </span>
+                      )
                       : <span className="chip-waiting">no interests yet</span>}
                   </div>
                 ))}

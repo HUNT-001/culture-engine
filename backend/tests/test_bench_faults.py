@@ -6,7 +6,7 @@ to API statuses. Nothing here raises a production exception directly (``tests/te
 does; that proves only the route's mapping, not the HTTP->error mapping).
 
 Production code exercised: ``QlooClient._get_json`` and the two fetch methods,
-``resolve_entities`` / ``retrieve_insights`` error handling, ``FATAL_PROVIDER_CODES``,
+``resolve_entities`` / ``retrieve_insights`` error handling,
 ``execute_workflow``, ``create_recommendations``, ``entities.search_entities``,
 ``plans.run_plan_recommendations`` and the plan persistence layer.
 """
@@ -22,7 +22,7 @@ from app.services.runtime import get_runtime
 from app.workflows.graph import build_recommendation_graph
 from bench import eval_faults as EF
 from bench.qloo_shape import BODY_SENTINEL, Fault, QlooMock, build_client
-from bench.runner import route_call, route_get
+from bench.runner import route_call, route_get, with_user_confirmation
 from bench.scenarios import scenarios_by_id
 from bench.testing import no_network  # noqa: F401
 from bench.world import build_world
@@ -78,22 +78,25 @@ def test_failed_combined_query_still_returns_individual_results():
 
 def test_fatal_codes_stop_the_run_on_the_first_request():
     for kind in ("http_401", "http_403", "http_429"):
-        res = route_call(S.request_payload(), build_world(S), (Fault("search", kind, nth=1),))
+        res = route_call(S.request_payload(), build_world(S), (Fault("insights", kind, nth=1),))
         assert res.status_code == 503
         assert res.mock.count() == 1                      # no further requests after a fatal code
 
 
-def test_a_down_provider_still_costs_one_search_per_interest_and_never_retries():
-    """Observation: non-fatal failures are not short-circuited, and nothing is retried."""
+def test_recommendation_workflow_makes_no_search_request_even_when_search_is_down():
+    """Resolution safety fix: only confirmed interests are used, so nothing is searched.
+
+    Previously every unconfirmed interest cost a /search (G5), and a down /search turned the
+    whole run into a 503. Now a /search outage cannot affect a run of confirmed interests.
+    """
     res = route_call(S.request_payload(), build_world(S), (Fault("search", "http_500"),))
-    assert res.status_code == 503
-    assert res.mock.count("search") == 3 and res.mock.count("insights") == 0   # 3 distinct terms
-    assert len({r.params["query"] for r in res.mock.requests}) == 3             # none repeated
+    assert res.status_code == 200 and res.body["options"]
+    assert res.mock.count("search") == 0 and res.mock.count("insights") > 0
 
 
 def test_non_retryable_errors_are_503_on_recommendations_but_502_on_entity_search():
     """Observation G3: the two routes map the same non-retryable provider error differently."""
-    rec = route_call(S.request_payload(), build_world(S), (Fault("search", "http_401"),))
+    rec = route_call(S.request_payload(), build_world(S), (Fault("insights", "http_401"),))
     ent = route_get("/api/entities/search", {"query": "Radiohead"}, build_world(S),
                     (Fault("search", "http_401"),))
     assert rec.status_code == 503 and ent.status_code == 502
@@ -111,15 +114,17 @@ def test_plan_route_fault_returns_503_and_persists_no_run(client):
     """Whole lifecycle: create -> join x2 -> preferences -> run with a failing provider."""
     plan = client.post("/api/plans", json={"location": S.location}).json()
     share = {"X-Share-Token": plan["share_token"]}
-    for person in S.participants:
+    confirmed = with_user_confirmation(S.request_payload(), build_world(S))["participants"]
+    for person, conf in zip(S.participants, confirmed):
         joined = client.post(f"/api/plans/{plan['plan_id']}/participants",
                              json={"display_name": person["display_name"]}, headers=share).json()
         put = client.put(
             f"/api/plans/{plan['plan_id']}/participants/{joined['participant_id']}/preferences",
-            json={"interests": person["interests"], "dislikes": []},
+            json={"interests": person["interests"], "dislikes": [],
+                  "resolved_interests": conf["resolved_interests"]},
             headers={"X-Participant-Token": joined["participant_token"]})
         assert put.status_code == 200
-    mock = QlooMock(build_world(S), (Fault("search", "http_429"),))
+    mock = QlooMock(build_world(S), (Fault("insights", "http_429"),))
     qloo = build_client(mock)
     graph = build_recommendation_graph(qloo, DeterministicComposer(), demo_mode=False, max_calls=5)
     runtime = {"settings": get_settings(), "graph": graph, "qloo": qloo}

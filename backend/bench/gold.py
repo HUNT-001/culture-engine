@@ -17,7 +17,9 @@ from __future__ import annotations
 
 SCHEMA_VERSION = "2.0"
 
-# Outcomes the evaluation can observe from the production resolve_entities node.
+# Outcomes the evaluation can classify for the production resolve_entities node. Since the
+# resolution safety fix production never binds an unconfirmed phrase, so AUTO_* must never
+# be observed; they stay in the taxonomy so a regression would be measured, not hidden.
 AUTO_CORRECT = "auto_correct"          # unconfirmed, auto-accepted, equals intended
 AUTO_WRONG = "auto_wrong"              # unconfirmed, auto-accepted, differs from intended
 ABSTAIN = "abstain"                    # left unresolved for the user to confirm
@@ -43,7 +45,9 @@ def _case(case_id, query, kind, candidates, intended, *, scenario_id=None,
     if intended is None:
         acceptable = [ABSTAIN]
     else:
-        acceptable = [AUTO_CORRECT, ABSTAIN, CONFIRMED_CORRECT]
+        # Product rule: the server never binds an entity the user has not confirmed, so an
+        # unconfirmed phrase may only abstain (even when the name matches exactly).
+        acceptable = [ABSTAIN, CONFIRMED_CORRECT]
     return {
         "case_id": case_id,
         "query": query,
@@ -52,8 +56,8 @@ def _case(case_id, query, kind, candidates, intended, *, scenario_id=None,
         "candidates": candidates,
         "intended": intended,
         "user_confirmation": ({"entity_id": confirm_entity_id} if confirm_entity_id else None),
-        # Product principle (brief s6): never silently bind an ambiguous phrase to the
-        # wrong entity. Abstaining (asking the user) is acceptable; auto_wrong is not.
+        # Product principle: no silent first-match or exact-name acceptance. Abstaining
+        # (asking the user to confirm) is acceptable; any automatic binding is not.
         "acceptable_outcomes": acceptable,
         "review": {"synthetic_ids": True, "human_verified": False, "live_verified": False},
         "note": note,

@@ -6,8 +6,13 @@
 `python -m bench.run_benchmark`); the per-test production-function map is in
 [`COMMON_THREAD_BENCHMARK_FUNCTION_MAP.md`](COMMON_THREAD_BENCHMARK_FUNCTION_MAP.md).
 
-> **This slice evaluates; it does not improve.** No production ranking, resolution, frontend
-> behaviour or configuration was changed. Gaps found are reported, not fixed.
+> **Update — resolution safety fix (branch `feature/common-thread-resolution-fix`).** The
+> original v2 slice only evaluated. This branch then changed one production behaviour:
+> unconfirmed interests are never bound to a Qloo entity by the server (no first-result and no
+> exact-name acceptance); the user must explicitly confirm each interest in both the Quick and
+> Collaborative flows. Gaps G2 and G5 below are closed by that change; the benchmark was
+> adapted (a simulated user confirms intended entities) and its numbers regenerated. No ranking,
+> evidence, budget or configuration behaviour was changed.
 
 ---
 
@@ -53,7 +58,7 @@ scenario inputs ─▶ world (invented venues, interest entities, per-entity aff
 ```
 
 **Real:** URL/param construction, status→error mapping, JSON handling, entity parsing,
-`_extract_explanation`, exact-match/confirmation resolution, request budget, dislike
+`_extract_explanation`, confirmation-only resolution, request budget, dislike
 filtering, per-participant affinity normalisation, ranking, option selection, evidence
 mapping, composer, provenance labels, route status mapping.
 **Synthetic:** the venues, interests, affinities and every response body. The wire is a
@@ -83,12 +88,16 @@ Not run live, so **nothing here shows the real Qloo service behaves like the fix
 **Entity resolution — `mocked-integration`** (`bench/eval_resolution.py`)
 Each gold case runs through the real `resolve_entities` via the real adapter. Outcomes:
 `auto_correct`, `auto_wrong`, `abstain` (left unresolved for the user), `confirmed_correct`,
-`confirmed_wrong`.
+`confirmed_wrong`. Since the resolution safety fix production binds **only** user-confirmed
+entities, so `auto_*` must be 0 and every unconfirmed phrase must abstain, be reported in
+`needs_confirmation` and cost no Qloo request; the `auto_*` outcomes stay in the taxonomy so a
+regression would be measured rather than hidden. A simulated user (`runner.with_user_confirmation`)
+picks the world's intended entity for each scenario phrase, standing in for the picker UI.
 - *False automatic-confirmation rate* = `auto_wrong` ÷ (unconfirmed phrases that have a
   verified intended entity). It is a rate over those phrases, not over all cases.
 - *Auto-confirmation precision* = `auto_correct` ÷ (`auto_correct` + `auto_wrong`).
 - *Abstain rate*; *confirmed-path correctness*; *unacceptable-outcome rate* (outcome outside
-  the case's acceptable set; `auto_wrong` is never acceptable).
+  the case's acceptable set; any automatic binding is unacceptable).
 - Gold id/type/disambiguation fidelity through the adapter and `/api/entities/search`.
 - Recall@5 / MRR over the gold candidate lists are `synthetic-arithmetic`: the lists are
   author-written, so they test the formula only, not Qloo's search.
@@ -164,7 +173,7 @@ The measured function-by-test table is in the function map document.
 
 | Finding | Value | Tag |
 |---|---|---|
-| False automatic confirmation (unconfirmed, intended entity known) | **2/11 (18.2%)**; both are exact-name homonyms | `mocked-integration`, n=13, synthetic gold |
+| False automatic confirmation (unconfirmed, intended entity known) | **0/11 (0.0%)** after the resolution safety fix (was 2/11: the Phoenix and INTERPOL exact-name homonyms); all 12 unconfirmed phrases abstain (automatic-acceptance coverage 0/12). A policy result, not an accuracy result: see the note below | `mocked-integration`, n=13, synthetic gold |
 | Exact-name dislike enforced / disclosed | **47/47** / **47/47** (+ case variants 47/47) | `mocked-integration` |
 | Empty feasible set handled and disclosed | **46/46** | `mocked-integration` |
 | Substring / category dislike enforced | **0/47** (unsupported by design) | `mocked-integration` |
@@ -185,15 +194,24 @@ favours it by construction.
 fixtures resemble real Qloo data, or that the production ranker is "better" or "worse"
 overall. They are structural process measures on invented venues.
 
-## 8. Newly discovered gaps (verified against production behaviour; none fixed here)
+**Interpreting the 0/11.** It follows from the policy (nothing is bound without explicit user
+confirmation), so it is 0 by construction and would stay 0 whatever Qloo returned. It is not
+evidence that entity resolution is accurate. Still open: (a) correctness now depends on the user
+picking the right candidate, which this benchmark can only simulate; (b) whether the intended
+entity appears in Qloo's live candidate list is unmeasured (live Recall@5 / MRR need independently
+verified labels, still pending); (c) a phrase with no candidate (e.g. the deliberately
+unresolvable one) cannot be confirmed and is simply left out, with the user told; (d) the gold is
+synthetic. Confirmation is also a cost: every interest needs a search and a pick.
+
+## 8. Gaps discovered (verified against production behaviour; G2 and G5 since closed, the rest not fixed)
 
 | # | Gap | Evidence |
 |---|---|---|
 | G1 | **Only the first captured explanation per venue is used.** `merge_candidate_batches` keeps the first non-None `qloo_explanation`, so interests credited by other participants' queries for the same venue are not displayed (202 of 331 fixture-credited interests surfaced; displayed names equal the first served response in 140/140 options). Weakens the "why this works for each person" claim. | `test_all_fixture_credited_interests_are_displayed` (`xfail(strict)`), `test_displayed_interests_equal_the_first_served_explanation` |
-| G2 | **Exact-name homonyms are silently auto-confirmed to the first match** (Phoenix city vs band; INTERPOL organisation vs band). The confirmation picker fixes it, but unconfirmed input does not ask. | `test_exact_name_homonym_is_not_silently_bound_to_the_wrong_entity` (`xfail(strict)`) |
+| G2 | ~~Exact-name homonyms are silently auto-confirmed to the first match~~ **Fixed by the resolution safety fix:** the server binds nothing the user has not confirmed. | `test_exact_name_homonym_is_not_silently_bound_to_the_wrong_entity` (now a passing test), `tests/test_resolution_safety.py` |
 | G3 | **Inconsistent status for non-retryable provider errors:** `/api/recommendations` returns 503, `/api/entities/search` returns 502 for the same `QLOO_AUTH_ERROR`. | `test_non_retryable_errors_are_503_on_recommendations_but_502_on_entity_search` |
 | G4 | **Budget and category dislikes cannot be enforced:** no price or category data on `Candidate`. Disclosed correctly, but 0 of the 26 constraints declared across the 48 scenarios can be enforced. | `test_candidate_schema_has_no_price_or_budget_field` |
-| G5 | **A down provider still costs one `/search` per distinct interest, and nothing is retried.** Non-fatal search failures are not short-circuited (fatal auth/rate-limit codes are; the Insights stage stops at its first failure). Cost/latency, not correctness. | `test_a_down_provider_still_costs_one_search_per_interest_and_never_retries` |
+| G5 | ~~A down provider still costs one `/search` per distinct interest~~ **Resolved as a side effect:** a recommendation run makes no `/search` request at all; `/search` is used only by the picker (`/api/entities/search`). | `test_recommendation_workflow_makes_no_search_request_even_when_search_is_down` |
 | G6 | **Fixture-over-HTTP output is indistinguishable from live output in the API** (`source:"qloo"`, `demo_mode:false`, "not independently verified"); only the harness can tell. Benchmark output must never be shown or persisted as product output. | `test_mocked_http_path_is_not_labelled_demo_even_though_it_is_fixture_data` |
 | G7 | **`Candidate` discards Qloo's `popularity`,** so a popularity baseline cannot be run on live data without retaining it. An evaluation constraint, not a defect. | `bench/rankers.py` (fixture-side popularity) |
 
@@ -218,7 +236,7 @@ The v1 documents are preserved, bannered, in [`benchmark-history/`](benchmark-hi
 ## 10. Live-request budget for a later slice (none used here)
 
 Computed from the mocked runs' own request logs; an **upper bound** (against the real
-service some phrases will not exact-match and will issue fewer Insights calls). Insights
+service a run issues no `/search` calls at all and the number of Insights calls depends only on the confirmed interests). Insights
 calls per run are capped at 5; the adapter has no retries.
 
 | Phase | Purpose | Requests |

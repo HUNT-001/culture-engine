@@ -36,7 +36,7 @@ The LLM is optional and may compose explanations only from normalized candidate 
 
 ## Known starter limitations
 
-- Entity resolution currently selects the first returned search result. Add a user-facing entity confirmation step before public/live use, especially for ambiguous names.
+- Entity resolution binds only interests the user explicitly confirmed (via the entity picker). Unconfirmed interests are never searched, matched by name or taken from a first result; they are excluded and reported in `unresolved_interests` / `needs_confirmation`.
 - Plan/participant tables are scaffolding; the direct recommendation route is the only wired application flow.
 - The initial LLM integration is explanation-only, not an unconstrained chat/agent loop.
 - Real provider parameter names and response schemas need contract testing.

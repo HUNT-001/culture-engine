@@ -107,6 +107,14 @@ class RecommendationOption(BaseModel):
     evidence_labels: list[str] = Field(default_factory=list)
 
 
+class UnconfirmedInterest(BaseModel):
+    """An interest that was excluded because the user has not confirmed a Qloo entity for it."""
+
+    participant_id: str
+    display_name: str
+    text: str
+
+
 class RecommendationResponse(BaseModel):
     run_id: str
     demo_mode: bool
@@ -114,6 +122,8 @@ class RecommendationResponse(BaseModel):
     options: list[RecommendationOption]
     warnings: list[str] = Field(default_factory=list)
     unresolved_interests: list[str] = Field(default_factory=list)
+    # Interests excluded for lack of explicit confirmation (never auto-matched by name).
+    needs_confirmation: list[UnconfirmedInterest] = Field(default_factory=list)
     status: Literal["complete", "partial", "failed"] = "complete"
 
 

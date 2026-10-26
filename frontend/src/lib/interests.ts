@@ -33,19 +33,35 @@ export function rowsFromSaved(interests: string[], resolved: ResolvedInterest[])
   return rows.length ? rows : [newRow()]
 }
 
-/** Build the API payload: typed texts + the confirmed-entity overlay. */
+/** The rows that will actually be submitted: trimmed, de-duplicated (case-insensitive,
+ *  preferring a confirmed row over an unconfirmed duplicate), capped at three. */
+export function submittedRows(rows: InterestRow[]): InterestRow[] {
+  const order: string[] = []
+  const byKey = new Map<string, InterestRow>()
+  for (const row of rows) {
+    const text = row.text.trim()
+    if (!text) continue
+    const key = text.toLowerCase()
+    const existing = byKey.get(key)
+    if (!existing) {
+      order.push(key)
+      byKey.set(key, row)
+    } else if (!existing.selected && row.selected) {
+      byKey.set(key, row)
+    }
+  }
+  return order.slice(0, MAX_INTERESTS).map((key) => byKey.get(key) as InterestRow)
+}
+
+/** Build the API payload: the user's own typed wording + the confirmed-entity overlay.
+ *  An entity is attached only when the user explicitly picked it; nothing is inferred. */
 export function buildInterestPayload(
   rows: InterestRow[],
 ): { interests: string[]; resolved_interests: ResolvedInterest[] } {
   const interests: string[] = []
   const resolved: ResolvedInterest[] = []
-  const seen = new Set<string>()
-  for (const row of rows) {
+  for (const row of submittedRows(rows)) {
     const text = row.text.trim()
-    if (!text) continue
-    const key = text.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
     interests.push(text)
     if (row.selected) {
       resolved.push({
@@ -55,18 +71,20 @@ export function buildInterestPayload(
         entity_type: row.selected.entity_type,
       })
     }
-    if (interests.length >= MAX_INTERESTS) break
   }
   return { interests, resolved_interests: resolved }
 }
 
+/** Blocking validation shared by the Quick and Collaborative flows. Every non-empty interest
+ *  must be confirmed to a specific entity (or removed): the server never guesses one. */
 export function validateInterestRows(rows: InterestRow[]): string[] {
-  const { interests } = buildInterestPayload(rows)
-  const errors: string[] = []
-  if (interests.length === 0) {
-    errors.push('Add at least one interest (letters or words, not just spaces or commas).')
+  const submitted = submittedRows(rows)
+  if (submitted.length === 0) {
+    return ['Add at least one interest (letters or words, not just spaces or commas).']
   }
-  return errors
+  return submitted
+    .filter((row) => !row.selected)
+    .map((row) => `Confirm which entity you mean for “${row.text.trim()}” — search and pick one, or remove it.`)
 }
 
 export type RowStatus = 'empty' | 'unconfirmed' | 'confirmed'
@@ -76,7 +94,16 @@ export function rowStatus(row: InterestRow): RowStatus {
   return row.selected ? 'confirmed' : 'unconfirmed'
 }
 
-/** How many typed interests are not yet confirmed (used for gentle guidance, not blocking). */
+/** How many typed interests are not yet confirmed (these block submission). */
 export function unconfirmedCount(rows: InterestRow[]): number {
   return rows.filter((r) => rowStatus(r) === 'unconfirmed').length
+}
+
+/** Saved interests of a participant that have no confirmed entity (e.g. saved before
+ *  confirmation was required). The server leaves these out of a run and says so. */
+export function unconfirmedSavedInterests(
+  interests: string[], resolved: ResolvedInterest[],
+): string[] {
+  const confirmed = new Set(resolved.map((r) => r.text.trim().toLowerCase()))
+  return interests.filter((t) => !confirmed.has(t.trim().toLowerCase()))
 }

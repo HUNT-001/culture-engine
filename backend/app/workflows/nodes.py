@@ -12,11 +12,8 @@ from app.services.ranking import (
 )
 from app.services.evidence import build_interest_index, matched_interest_names
 from app.services.provenance import validate_and_label_options
-from app.services.resolution import confirmed_index, exact_match, normalize_name
+from app.services.resolution import confirmed_index, normalize_name
 from app.workflows.state import RecommendationState
-
-# Errors that will repeat on every further call: stop the run instead of degrading.
-FATAL_PROVIDER_CODES = {"QLOO_AUTH_ERROR", "QLOO_RATE_LIMIT"}
 
 
 class WorkflowDependencies:
@@ -41,64 +38,47 @@ def build_nodes(deps: WorkflowDependencies):
         }
 
     async def resolve_entities(state: RecommendationState) -> dict[str, Any]:
+        """Bind only interests the user explicitly confirmed to a Qloo entity.
+
+        An interest without a confirmed entity is never searched for, matched by name, or
+        taken from a first result: it is excluded from retrieval and reported back (as
+        `unresolved_interests` and a structured `needs_confirmation` entry) so the user can
+        confirm which entity they mean. Original wording and confirmed ids pass through as-is.
+        """
         request = RecommendationRequest.model_validate(state["_validated_request"])
         resolved: dict[str, list[dict[str, Any]]] = {}
         unresolved: list[str] = []
-        provider_errors = list(state.get("provider_errors", []))
-        lookup_failed = False
-        # None marks a term whose lookup failed, so it is not retried within this run.
-        cache: dict[str, list[dict[str, Any]] | None] = {}
+        needs_confirmation: list[dict[str, str]] = []
         for participant in request.participants:
             resolved[participant.participant_id] = []
             confirmed = confirmed_index(participant.resolved_interests)
             for term in participant.interests:
-                # 1) A user-confirmed interest is used directly and never re-resolved.
                 match = confirmed.get(normalize_name(term))
-                if match is not None:
-                    resolved[participant.participant_id].append({
-                        "input": term,
-                        "entity_id": match["entity_id"],
-                        "name": match["name"],
-                        "entity_type": match.get("entity_type", "unknown"),
+                if match is None:
+                    unresolved.append(f"{participant.display_name}: {term}")
+                    needs_confirmation.append({
+                        "participant_id": participant.participant_id,
+                        "display_name": participant.display_name,
+                        "text": term,
                     })
-                    continue
-                # 2) Otherwise search, but auto-accept ONLY an exact normalized-name match.
-                key = term.casefold().strip()
-                if key not in cache:
-                    try:
-                        cache[key] = await deps.qloo.search_entities(term, take=3)
-                    except QlooProviderError as exc:
-                        if exc.code in FATAL_PROVIDER_CODES:
-                            raise
-                        provider_errors.append(exc.code)
-                        cache[key] = None
-                matches = cache[key]
-                if matches is None:
-                    lookup_failed = True
-                    unresolved.append(f"{participant.display_name}: {term}")
-                    continue
-                selected = exact_match(term, matches)
-                if selected is None:
-                    # No exact match: do not silently take an ambiguous result; leave it for
-                    # the user to confirm via the entity-search endpoint.
-                    unresolved.append(f"{participant.display_name}: {term}")
                     continue
                 resolved[participant.participant_id].append({
                     "input": term,
-                    "entity_id": str(selected["entity_id"]),
-                    "name": str(selected["name"]),
-                    "entity_type": selected.get("entity_type", "unknown"),
+                    "entity_id": match["entity_id"],
+                    "name": match["name"],
+                    "entity_type": match.get("entity_type", "unknown"),
                 })
         warnings = list(state.get("warnings", []))
-        if lookup_failed:
-            warnings.append("Some interests could not be looked up because the cultural data provider failed.")
         if unresolved:
-            warnings.append("Some interests could not be resolved and were excluded.")
+            warnings.append(
+                "Some interests were not confirmed to a specific Qloo entity and were excluded. "
+                "Confirm which entity you mean, then run again."
+            )
         return {
             "resolved_profiles": resolved,
             "unresolved_interests": unresolved,
+            "needs_confirmation": needs_confirmation,
             "warnings": warnings,
-            "provider_errors": provider_errors,
         }
 
     async def retrieve_insights(state: RecommendationState) -> dict[str, Any]:
@@ -222,6 +202,9 @@ def build_nodes(deps: WorkflowDependencies):
                 pass
             options.append(option.model_dump())
         status = "complete" if len(options) >= 3 else ("partial" if options else "failed")
+        if status == "complete" and state.get("needs_confirmation"):
+            # Excluded (unconfirmed) interests mean the result does not reflect everyone.
+            status = "partial"
         return {"options": options, "status": status}
 
     async def validate_output(state: RecommendationState) -> dict[str, Any]:

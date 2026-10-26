@@ -40,7 +40,6 @@ TARGETS = [
     ("providers/qloo.py", "QlooClient._extract_explanation"),
     ("providers/qloo.py", "QlooClient.search_entities"),
     ("providers/qloo.py", "QlooClient.get_place_recommendations"),
-    ("services/resolution.py", "exact_match"),
     ("services/resolution.py", "confirmed_index"),
     ("services/resolution.py", "normalize_name"),
     ("workflows/nodes.py", "build_nodes.resolve_entities"),

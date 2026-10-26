@@ -22,10 +22,11 @@
         "/api/recommendations": true
       },
       "symbols": {
-        "user_confirmed_resolution.exact_match": true,
+        "resolution_safety.no_exact_match_auto_accept": true,
         "user_confirmed_resolution.confirmed_index": true,
         "evidence_mapping.matched_interest_names": true,
         "ranking.apply_hard_constraints": true,
+        "schema.RecommendationResponse.needs_confirmation": true,
         "schema.Candidate.participant_affinities": true,
         "schema.Candidate.matched_interests": true,
         "schema.ParticipantInput.resolved_interests": true,
@@ -56,16 +57,20 @@
         "query": "Radiohead",
         "kind": "exact_unique",
         "scenario_id": null,
-        "outcome": "auto_correct",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
         "acceptable": true,
-        "resolved_entity_id": "artist:radiohead",
+        "resolved_entity_id": null,
         "intended_entity_id": "artist:radiohead",
-        "resolved_entity_type": "urn:entity:artist",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Radiohead"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -73,16 +78,20 @@
         "query": "Studio Ghibli",
         "kind": "exact_unique",
         "scenario_id": null,
-        "outcome": "auto_correct",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
         "acceptable": true,
-        "resolved_entity_id": "brand:studio-ghibli",
+        "resolved_entity_id": null,
         "intended_entity_id": "brand:studio-ghibli",
-        "resolved_entity_type": "urn:entity:brand",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Studio Ghibli"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -90,16 +99,20 @@
         "query": "Phoenix",
         "kind": "exact_homonym_intended_not_first",
         "scenario_id": "ambiguous_resolution_01",
-        "outcome": "auto_wrong",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
-        "acceptable": false,
-        "resolved_entity_id": "destination:phoenix-az",
+        "acceptable": true,
+        "resolved_entity_id": null,
         "intended_entity_id": "artist:phoenix-band",
-        "resolved_entity_type": "urn:entity:destination",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Phoenix"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -107,16 +120,20 @@
         "query": "Titanic",
         "kind": "exact_with_nonexact_distractor",
         "scenario_id": "ambiguous_resolution_02",
-        "outcome": "auto_correct",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
         "acceptable": true,
-        "resolved_entity_id": "movie:titanic-1997",
+        "resolved_entity_id": null,
         "intended_entity_id": "movie:titanic-1997",
-        "resolved_entity_type": "urn:entity:movie",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Titanic"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -124,16 +141,20 @@
         "query": "Interpol",
         "kind": "exact_homonym_intended_not_first",
         "scenario_id": "ambiguous_resolution_03",
-        "outcome": "auto_wrong",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
-        "acceptable": false,
-        "resolved_entity_id": "brand:interpol-org",
+        "acceptable": true,
+        "resolved_entity_id": null,
         "intended_entity_id": "artist:interpol-band",
-        "resolved_entity_type": "urn:entity:brand",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Interpol"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "held_out"
       },
       {
@@ -141,16 +162,20 @@
         "query": "Pulp",
         "kind": "exact_with_nonexact_distractor",
         "scenario_id": "ambiguous_resolution_04",
-        "outcome": "auto_correct",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
         "acceptable": true,
-        "resolved_entity_id": "artist:pulp-band",
+        "resolved_entity_id": null,
         "intended_entity_id": "artist:pulp-band",
-        "resolved_entity_type": "urn:entity:artist",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Pulp"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "held_out"
       },
       {
@@ -158,16 +183,20 @@
         "query": "Prince",
         "kind": "exact_with_nonexact_distractor",
         "scenario_id": "ambiguous_resolution_05",
-        "outcome": "auto_correct",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
         "acceptable": true,
-        "resolved_entity_id": "artist:prince",
+        "resolved_entity_id": null,
         "intended_entity_id": "artist:prince",
-        "resolved_entity_type": "urn:entity:artist",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Prince"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "held_out"
       },
       {
@@ -175,16 +204,20 @@
         "query": "Nirvana",
         "kind": "exact_homonym_intended_first",
         "scenario_id": "ambiguous_resolution_06",
-        "outcome": "auto_correct",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
         "acceptable": true,
-        "resolved_entity_id": "artist:nirvana-band",
+        "resolved_entity_id": null,
         "intended_entity_id": "artist:nirvana-band",
-        "resolved_entity_type": "urn:entity:artist",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "Nirvana"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "held_out"
       },
       {
@@ -199,9 +232,13 @@
         "resolved_entity_id": null,
         "intended_entity_id": "brand:studio-ghibli",
         "resolved_entity_type": null,
-        "searched_for_query": true,
+        "searched_for_query": false,
         "listed_unresolved": true,
-        "qloo_requests": 4,
+        "needs_confirmation": [
+          "Ghibli"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -216,9 +253,13 @@
         "resolved_entity_id": null,
         "intended_entity_id": "artist:the-beatles",
         "resolved_entity_type": null,
-        "searched_for_query": true,
+        "searched_for_query": false,
         "listed_unresolved": true,
-        "qloo_requests": 4,
+        "needs_confirmation": [
+          "Beatles"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -233,9 +274,13 @@
         "resolved_entity_id": null,
         "intended_entity_id": null,
         "resolved_entity_type": null,
-        "searched_for_query": true,
+        "searched_for_query": false,
         "listed_unresolved": true,
-        "qloo_requests": 4,
+        "needs_confirmation": [
+          "zzqqxx nonexistent genre"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -243,16 +288,20 @@
         "query": "RADIOHEAD",
         "kind": "normalization",
         "scenario_id": null,
-        "outcome": "auto_correct",
+        "outcome": "abstain",
         "has_intended": true,
         "user_confirmed": false,
         "acceptable": true,
-        "resolved_entity_id": "artist:radiohead",
+        "resolved_entity_id": null,
         "intended_entity_id": "artist:radiohead",
-        "resolved_entity_type": "urn:entity:artist",
-        "searched_for_query": true,
-        "listed_unresolved": false,
-        "qloo_requests": 5,
+        "resolved_entity_type": null,
+        "searched_for_query": false,
+        "listed_unresolved": true,
+        "needs_confirmation": [
+          "RADIOHEAD"
+        ],
+        "qloo_requests": 0,
+        "search_requests": 0,
         "split": "development"
       },
       {
@@ -269,33 +318,35 @@
         "resolved_entity_type": "urn:entity:artist",
         "searched_for_query": false,
         "listed_unresolved": false,
-        "qloo_requests": 4,
+        "needs_confirmation": [],
+        "qloo_requests": 2,
+        "search_requests": 0,
         "split": "development"
       }
     ],
     "overall": {
       "n_cases": 13,
       "counts": {
-        "auto_correct": 7,
-        "auto_wrong": 2,
-        "abstain": 3,
+        "auto_correct": 0,
+        "auto_wrong": 0,
+        "abstain": 12,
         "confirmed_correct": 1,
         "confirmed_wrong": 0
       },
       "false_auto_confirmation": {
-        "numerator": 2,
+        "numerator": 0,
         "denominator": 11,
-        "value": 0.18181818181818182
+        "value": 0.0
       },
       "auto_confirmation_precision": {
-        "numerator": 7,
-        "denominator": 9,
-        "value": 0.7777777777777778
+        "numerator": 0,
+        "denominator": 0,
+        "value": null
       },
       "abstain_rate": {
-        "numerator": 3,
+        "numerator": 12,
         "denominator": 12,
-        "value": 0.25
+        "value": 1.0
       },
       "confirmed_correct_rate": {
         "numerator": 1,
@@ -303,34 +354,34 @@
         "value": 1.0
       },
       "unacceptable_outcome_rate": {
-        "numerator": 2,
+        "numerator": 0,
         "denominator": 13,
-        "value": 0.15384615384615385
+        "value": 0.0
       }
     },
     "development": {
       "n_cases": 9,
       "counts": {
-        "auto_correct": 4,
-        "auto_wrong": 1,
-        "abstain": 3,
+        "auto_correct": 0,
+        "auto_wrong": 0,
+        "abstain": 8,
         "confirmed_correct": 1,
         "confirmed_wrong": 0
       },
       "false_auto_confirmation": {
-        "numerator": 1,
+        "numerator": 0,
         "denominator": 7,
-        "value": 0.14285714285714285
+        "value": 0.0
       },
       "auto_confirmation_precision": {
-        "numerator": 4,
-        "denominator": 5,
-        "value": 0.8
+        "numerator": 0,
+        "denominator": 0,
+        "value": null
       },
       "abstain_rate": {
-        "numerator": 3,
+        "numerator": 8,
         "denominator": 8,
-        "value": 0.375
+        "value": 1.0
       },
       "confirmed_correct_rate": {
         "numerator": 1,
@@ -338,34 +389,34 @@
         "value": 1.0
       },
       "unacceptable_outcome_rate": {
-        "numerator": 1,
+        "numerator": 0,
         "denominator": 9,
-        "value": 0.1111111111111111
+        "value": 0.0
       }
     },
     "held_out": {
       "n_cases": 4,
       "counts": {
-        "auto_correct": 3,
-        "auto_wrong": 1,
-        "abstain": 0,
+        "auto_correct": 0,
+        "auto_wrong": 0,
+        "abstain": 4,
         "confirmed_correct": 0,
         "confirmed_wrong": 0
       },
       "false_auto_confirmation": {
-        "numerator": 1,
-        "denominator": 4,
-        "value": 0.25
-      },
-      "auto_confirmation_precision": {
-        "numerator": 3,
-        "denominator": 4,
-        "value": 0.75
-      },
-      "abstain_rate": {
         "numerator": 0,
         "denominator": 4,
         "value": 0.0
+      },
+      "auto_confirmation_precision": {
+        "numerator": 0,
+        "denominator": 0,
+        "value": null
+      },
+      "abstain_rate": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
       },
       "confirmed_correct_rate": {
         "numerator": 0,
@@ -373,34 +424,34 @@
         "value": null
       },
       "unacceptable_outcome_rate": {
-        "numerator": 1,
+        "numerator": 0,
         "denominator": 4,
-        "value": 0.25
+        "value": 0.0
       }
     },
     "exact_homonym_subset": {
       "n_cases": 3,
       "counts": {
-        "auto_correct": 1,
-        "auto_wrong": 2,
-        "abstain": 0,
+        "auto_correct": 0,
+        "auto_wrong": 0,
+        "abstain": 3,
         "confirmed_correct": 0,
         "confirmed_wrong": 0
       },
       "false_auto_confirmation": {
-        "numerator": 2,
-        "denominator": 3,
-        "value": 0.6666666666666666
-      },
-      "auto_confirmation_precision": {
-        "numerator": 1,
-        "denominator": 3,
-        "value": 0.3333333333333333
-      },
-      "abstain_rate": {
         "numerator": 0,
         "denominator": 3,
         "value": 0.0
+      },
+      "auto_confirmation_precision": {
+        "numerator": 0,
+        "denominator": 0,
+        "value": null
+      },
+      "abstain_rate": {
+        "numerator": 3,
+        "denominator": 3,
+        "value": 1.0
       },
       "confirmed_correct_rate": {
         "numerator": 0,
@@ -408,9 +459,9 @@
         "value": null
       },
       "unacceptable_outcome_rate": {
-        "numerator": 2,
+        "numerator": 0,
         "denominator": 3,
-        "value": 0.6666666666666666
+        "value": 0.0
       }
     },
     "confirmed_path": {
@@ -418,7 +469,18 @@
       "never_searched": true,
       "all_correct": true
     },
-    "unconfirmed_always_searched": true,
+    "unconfirmed_path": {
+      "n": 12,
+      "never_searched": true,
+      "always_abstain": true,
+      "always_asks_user": true,
+      "no_qloo_request": true
+    },
+    "picker_confirmed_path": {
+      "n": 12,
+      "all_correct": true,
+      "never_searched": true
+    },
     "candidate_fidelity": {
       "provenance": "mocked-integration",
       "cases": [
@@ -1537,11 +1599,11 @@
     "note": "Support is judged against the mock server's own served data; it shows the production mapping/labelling is faithful to its inputs, not real-world accuracy.",
     "overall": {
       "n_scenarios": 47,
-      "n_claims": 703,
+      "n_claims": 704,
       "support": {
         "overall": {
-          "numerator": 703,
-          "denominator": 703,
+          "numerator": 704,
+          "denominator": 704,
           "value": 1.0
         },
         "by_type": {
@@ -1561,8 +1623,8 @@
             "value": 1.0
           },
           "named_interest": {
-            "numerator": 202,
-            "denominator": 202,
+            "numerator": 203,
+            "denominator": 203,
             "value": 1.0
           }
         }
@@ -1570,18 +1632,18 @@
       "unsupported_examples": [],
       "identifier_leaks": 0,
       "mapping_completeness": {
-        "numerator": 202,
-        "denominator": 331,
-        "value": 0.6102719033232629
+        "numerator": 203,
+        "denominator": 332,
+        "value": 0.6114457831325302
       }
     },
     "development": {
       "n_scenarios": 15,
-      "n_claims": 224,
+      "n_claims": 225,
       "support": {
         "overall": {
-          "numerator": 224,
-          "denominator": 224,
+          "numerator": 225,
+          "denominator": 225,
           "value": 1.0
         },
         "by_type": {
@@ -1601,8 +1663,8 @@
             "value": 1.0
           },
           "named_interest": {
-            "numerator": 63,
-            "denominator": 63,
+            "numerator": 64,
+            "denominator": 64,
             "value": 1.0
           }
         }
@@ -1610,9 +1672,9 @@
       "unsupported_examples": [],
       "identifier_leaks": 0,
       "mapping_completeness": {
-        "numerator": 63,
-        "denominator": 101,
-        "value": 0.6237623762376238
+        "numerator": 64,
+        "denominator": 102,
+        "value": 0.6274509803921569
       }
     },
     "held_out": {
@@ -1704,7 +1766,7 @@
             "value": 0.8936170212765957
           },
           "mean_worst_member_best_rank": 2.395348837209302,
-          "mean_jaccard_vs_production": 0.41914893617021276
+          "mean_jaccard_vs_production": 0.425531914893617
         },
         "rank_aggregation": {
           "executed": true,
@@ -1721,7 +1783,7 @@
             "value": 0.9787234042553191
           },
           "mean_worst_member_best_rank": 1.065217391304348,
-          "mean_jaccard_vs_production": 0.6638297872340425
+          "mean_jaccard_vs_production": 0.6531914893617021
         },
         "affinity_only": {
           "executed": true,
@@ -1737,7 +1799,7 @@
             "denominator": 47,
             "value": 0.9574468085106383
           },
-          "mean_worst_member_best_rank": 1.4666666666666666,
+          "mean_worst_member_best_rank": 1.4444444444444444,
           "mean_jaccard_vs_production": 0.6914893617021277
         },
         "production": {
@@ -1754,7 +1816,7 @@
             "denominator": 47,
             "value": 0.9787234042553191
           },
-          "mean_worst_member_best_rank": 1.5434782608695652,
+          "mean_worst_member_best_rank": 1.5217391304347827,
           "mean_jaccard_vs_production": 1.0
         },
         "production_no_affinity": {
@@ -1771,8 +1833,8 @@
             "denominator": 47,
             "value": 0.9787234042553191
           },
-          "mean_worst_member_best_rank": 1.6304347826086956,
-          "mean_jaccard_vs_production": 0.9361702127659575
+          "mean_worst_member_best_rank": 1.6521739130434783,
+          "mean_jaccard_vs_production": 0.9148936170212766
         }
       },
       "development": {
@@ -1791,7 +1853,7 @@
             "value": 0.9333333333333333
           },
           "mean_worst_member_best_rank": 2.8,
-          "mean_jaccard_vs_production": 0.39333333333333337
+          "mean_jaccard_vs_production": 0.41333333333333333
         },
         "rank_aggregation": {
           "executed": true,
@@ -1808,7 +1870,7 @@
             "value": 1.0
           },
           "mean_worst_member_best_rank": 1.0,
-          "mean_jaccard_vs_production": 0.5933333333333334
+          "mean_jaccard_vs_production": 0.56
         },
         "affinity_only": {
           "executed": true,
@@ -1825,7 +1887,7 @@
             "value": 1.0
           },
           "mean_worst_member_best_rank": 1.4,
-          "mean_jaccard_vs_production": 0.6933333333333334
+          "mean_jaccard_vs_production": 0.7266666666666667
         },
         "production": {
           "executed": true,
@@ -1859,7 +1921,7 @@
             "value": 1.0
           },
           "mean_worst_member_best_rank": 1.6666666666666667,
-          "mean_jaccard_vs_production": 0.9
+          "mean_jaccard_vs_production": 0.8666666666666667
         }
       },
       "held_out": {
@@ -1911,8 +1973,8 @@
             "denominator": 32,
             "value": 0.9375
           },
-          "mean_worst_member_best_rank": 1.5,
-          "mean_jaccard_vs_production": 0.690625
+          "mean_worst_member_best_rank": 1.4666666666666666,
+          "mean_jaccard_vs_production": 0.675
         },
         "production": {
           "executed": true,
@@ -1928,7 +1990,7 @@
             "denominator": 32,
             "value": 0.96875
           },
-          "mean_worst_member_best_rank": 1.5483870967741935,
+          "mean_worst_member_best_rank": 1.5161290322580645,
           "mean_jaccard_vs_production": 1.0
         },
         "production_no_affinity": {
@@ -1945,8 +2007,8 @@
             "denominator": 32,
             "value": 0.96875
           },
-          "mean_worst_member_best_rank": 1.6129032258064515,
-          "mean_jaccard_vs_production": 0.953125
+          "mean_worst_member_best_rank": 1.6451612903225807,
+          "mean_jaccard_vs_production": 0.9375
         }
       }
     },
@@ -1966,7 +2028,7 @@
             "denominator": 47,
             "value": 0.9787234042553191
           },
-          "mean_worst_member_best_rank": 1.6304347826086956,
+          "mean_worst_member_best_rank": 1.608695652173913,
           "mean_jaccard_vs_production": null
         },
         "popularity_baseline": {
@@ -2044,7 +2106,7 @@
             "denominator": 32,
             "value": 0.96875
           },
-          "mean_worst_member_best_rank": 1.7419354838709677,
+          "mean_worst_member_best_rank": 1.7096774193548387,
           "mean_jaccard_vs_production": null
         },
         "popularity_baseline": {
@@ -5444,7 +5506,7 @@
             "worst_member_best_rank": 2,
             "n_items": 3,
             "distinct": true,
-            "jaccard_vs_production": 0.2,
+            "jaccard_vs_production": 0.5,
             "top": [
               "c6228e1a-1c2a-5f9b-9d3a-f8c36e98f404",
               "eb1022b7-2a29-5a20-b913-c4b5fffac697",
@@ -5459,11 +5521,11 @@
             "worst_member_best_rank": 1,
             "n_items": 3,
             "distinct": true,
-            "jaccard_vs_production": 1.0,
+            "jaccard_vs_production": 0.5,
             "top": [
               "46bc4bb6-03b7-5e90-a86b-05ebe1c40360",
               "65de83b4-9998-561f-b648-dc37549386f8",
-              "935acedf-2bdc-5ed6-935f-f5b976ecbf88"
+              "7b7dc487-80b6-5982-a12c-6f9248958285"
             ]
           },
           "affinity_only": {
@@ -5474,11 +5536,11 @@
             "worst_member_best_rank": 1,
             "n_items": 3,
             "distinct": true,
-            "jaccard_vs_production": 0.5,
+            "jaccard_vs_production": 1.0,
             "top": [
               "46bc4bb6-03b7-5e90-a86b-05ebe1c40360",
               "65de83b4-9998-561f-b648-dc37549386f8",
-              "7ccf2e8b-cc42-560b-b166-587a7125c9ce"
+              "c6228e1a-1c2a-5f9b-9d3a-f8c36e98f404"
             ]
           },
           "production": {
@@ -5493,7 +5555,7 @@
             "top": [
               "46bc4bb6-03b7-5e90-a86b-05ebe1c40360",
               "65de83b4-9998-561f-b648-dc37549386f8",
-              "935acedf-2bdc-5ed6-935f-f5b976ecbf88"
+              "c6228e1a-1c2a-5f9b-9d3a-f8c36e98f404"
             ]
           },
           "production_no_affinity": {
@@ -5504,11 +5566,11 @@
             "worst_member_best_rank": 1,
             "n_items": 3,
             "distinct": true,
-            "jaccard_vs_production": 1.0,
+            "jaccard_vs_production": 0.5,
             "top": [
               "46bc4bb6-03b7-5e90-a86b-05ebe1c40360",
               "65de83b4-9998-561f-b648-dc37549386f8",
-              "935acedf-2bdc-5ed6-935f-f5b976ecbf88"
+              "7b7dc487-80b6-5982-a12c-6f9248958285"
             ]
           }
         },
@@ -5687,7 +5749,7 @@
             "top": [
               "e1ddbcb2-74f0-5197-8169-4d716f831ab4",
               "788f178f-3e12-5901-91ae-8848a0bc7bb6",
-              "f6240119-8ef6-5720-91fc-1413b7af0897"
+              "b93f20d1-cbf1-5d47-bd09-2119d5ac320f"
             ]
           },
           "affinity_only": {
@@ -5695,14 +5757,14 @@
             "coverage_fraction": 1.0,
             "all_served": true,
             "all_served_top5": true,
-            "worst_member_best_rank": 2,
+            "worst_member_best_rank": 1,
             "n_items": 3,
             "distinct": true,
-            "jaccard_vs_production": 1.0,
+            "jaccard_vs_production": 0.5,
             "top": [
               "e1ddbcb2-74f0-5197-8169-4d716f831ab4",
-              "f889905b-5eae-5e8d-8b14-c11ab77dc5fc",
-              "f6240119-8ef6-5720-91fc-1413b7af0897"
+              "788f178f-3e12-5901-91ae-8848a0bc7bb6",
+              "303b8f1f-9367-561e-ba51-8afefc779395"
             ]
           },
           "production": {
@@ -5710,12 +5772,12 @@
             "coverage_fraction": 1.0,
             "all_served": true,
             "all_served_top5": true,
-            "worst_member_best_rank": 2,
+            "worst_member_best_rank": 1,
             "n_items": 3,
             "distinct": true,
             "jaccard_vs_production": 1.0,
             "top": [
-              "f889905b-5eae-5e8d-8b14-c11ab77dc5fc",
+              "788f178f-3e12-5901-91ae-8848a0bc7bb6",
               "e1ddbcb2-74f0-5197-8169-4d716f831ab4",
               "f6240119-8ef6-5720-91fc-1413b7af0897"
             ]
@@ -5725,14 +5787,14 @@
             "coverage_fraction": 1.0,
             "all_served": true,
             "all_served_top5": true,
-            "worst_member_best_rank": 2,
+            "worst_member_best_rank": 3,
             "n_items": 3,
             "distinct": true,
-            "jaccard_vs_production": 1.0,
+            "jaccard_vs_production": 0.5,
             "top": [
+              "788f178f-3e12-5901-91ae-8848a0bc7bb6",
               "f6240119-8ef6-5720-91fc-1413b7af0897",
-              "f889905b-5eae-5e8d-8b14-c11ab77dc5fc",
-              "e1ddbcb2-74f0-5197-8169-4d716f831ab4"
+              "f889905b-5eae-5e8d-8b14-c11ab77dc5fc"
             ]
           }
         },
@@ -5743,7 +5805,7 @@
             "coverage_fraction": 1.0,
             "all_served": true,
             "all_served_top5": true,
-            "worst_member_best_rank": 2,
+            "worst_member_best_rank": 1,
             "n_items": 3,
             "distinct": true,
             "n_options": 3
@@ -7334,8 +7396,8 @@
   "faults": {
     "provenance": "mocked-integration",
     "level": "end-to-end: mock HTTP -> QlooClient -> workflow -> FastAPI route",
-    "n_rows": 35,
-    "meets_contract": 35,
+    "n_rows": 33,
+    "meets_contract": 33,
     "leaks": 0,
     "violations": [],
     "rows": [
@@ -7345,15 +7407,16 @@
         "kind": "http_400",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_BAD_REQUEST",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7361,15 +7424,16 @@
         "kind": "http_401",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_AUTH_ERROR",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7377,15 +7441,16 @@
         "kind": "http_403",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_AUTH_ERROR",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7393,15 +7458,16 @@
         "kind": "http_429",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_RATE_LIMIT",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7409,15 +7475,16 @@
         "kind": "http_500",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_UPSTREAM_ERROR",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7425,15 +7492,16 @@
         "kind": "timeout",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_TIMEOUT",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7441,15 +7509,16 @@
         "kind": "connect_error",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_NETWORK_ERROR",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7457,15 +7526,16 @@
         "kind": "invalid_json",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_INVALID_JSON",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7473,15 +7543,16 @@
         "kind": "not_object",
         "nth": null,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_BAD_RESPONSE",
-        "n_options": null,
+        "expect": "200_ok",
+        "observed": "200_ok",
+        "http_status": 200,
+        "error_code": null,
+        "n_options": 3,
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7489,15 +7560,16 @@
         "kind": "empty",
         "nth": null,
         "query": null,
-        "expect": "200_failed",
-        "observed": "200_failed",
+        "expect": "200_ok",
+        "observed": "200_ok",
         "http_status": 200,
         "error_code": null,
-        "n_options": 0,
-        "n_warnings": 4,
+        "n_options": 3,
+        "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7505,15 +7577,16 @@
         "kind": "malformed_items",
         "nth": null,
         "query": null,
-        "expect": "200_failed",
-        "observed": "200_failed",
+        "expect": "200_ok",
+        "observed": "200_ok",
         "http_status": 200,
         "error_code": null,
-        "n_options": 0,
-        "n_warnings": 4,
+        "n_options": 3,
+        "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7521,15 +7594,16 @@
         "kind": "missing_results_key",
         "nth": null,
         "query": null,
-        "expect": "200_failed",
-        "observed": "200_failed",
+        "expect": "200_ok",
+        "observed": "200_ok",
         "http_status": 200,
         "error_code": null,
-        "n_options": 0,
-        "n_warnings": 4,
+        "n_options": 3,
+        "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 3
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7545,7 +7619,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7561,7 +7636,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7577,7 +7653,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7593,7 +7670,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7609,7 +7687,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7625,7 +7704,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7641,7 +7721,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7657,7 +7738,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7673,7 +7755,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 4
+        "qloo_requests": 1,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7689,7 +7772,8 @@
         "n_warnings": 2,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 6
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7705,7 +7789,8 @@
         "n_warnings": 2,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 6
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7721,7 +7806,8 @@
         "n_warnings": 2,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 6
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7737,7 +7823,8 @@
         "n_warnings": 2,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 5
+        "qloo_requests": 2,
+        "search_requests": 0
       },
       {
         "route": "recommendations",
@@ -7753,55 +7840,25 @@
         "n_warnings": 1,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 6
+        "qloo_requests": 3,
+        "search_requests": 0
       },
       {
-        "route": "recommendations",
-        "stage": "search",
-        "kind": "timeout",
+        "route": "recommendations_unconfirmed",
+        "stage": null,
+        "kind": null,
         "nth": null,
-        "query": "indie films",
-        "expect": "200_partial",
-        "observed": "200_partial",
-        "http_status": 200,
-        "error_code": null,
-        "n_options": 3,
-        "n_warnings": 2,
-        "leaked": [],
-        "meets_contract": true,
-        "qloo_requests": 6
-      },
-      {
-        "route": "recommendations",
-        "stage": "search",
-        "kind": "http_429",
-        "nth": 1,
         "query": null,
-        "expect": "503",
-        "observed": "503",
-        "http_status": 503,
-        "error_code": "QLOO_RATE_LIMIT",
-        "n_options": null,
-        "n_warnings": 0,
-        "leaked": [],
-        "meets_contract": true,
-        "qloo_requests": 1
-      },
-      {
-        "route": "recommendations",
-        "stage": "search",
-        "kind": "malformed_items",
-        "nth": null,
-        "query": "indie films",
-        "expect": "200_partial",
-        "observed": "200_partial",
+        "expect": "200_failed",
+        "observed": "200_failed",
         "http_status": 200,
         "error_code": null,
-        "n_options": 3,
-        "n_warnings": 1,
+        "n_options": 0,
+        "n_warnings": 4,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 6
+        "qloo_requests": 0,
+        "search_requests": 0
       },
       {
         "route": "entities",
@@ -7817,7 +7874,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 1,
+        "search_requests": 1
       },
       {
         "route": "entities",
@@ -7833,7 +7891,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 1,
+        "search_requests": 1
       },
       {
         "route": "entities",
@@ -7849,7 +7908,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 1,
+        "search_requests": 1
       },
       {
         "route": "entities",
@@ -7865,7 +7925,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 1,
+        "search_requests": 1
       },
       {
         "route": "entities",
@@ -7881,7 +7942,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 1,
+        "search_requests": 1
       },
       {
         "route": "entities",
@@ -7897,7 +7959,8 @@
         "n_warnings": 0,
         "leaked": [],
         "meets_contract": true,
-        "qloo_requests": 1
+        "qloo_requests": 1,
+        "search_requests": 1
       }
     ],
     "coverage_map": {
@@ -7936,48 +7999,48 @@
         },
         {
           "phase": "L2 six representative scenarios through the checkpoint workflow",
-          "requests": 43,
+          "requests": 19,
           "per_case": [
             {
               "scenario_id": "shared_tastes_01",
-              "search_requests": 3,
+              "search_requests": 0,
               "insights_requests": 3,
-              "total_upper_bound": 6
+              "total_upper_bound": 3
             },
             {
               "scenario_id": "conflicting_tastes_01",
-              "search_requests": 4,
+              "search_requests": 0,
               "insights_requests": 3,
-              "total_upper_bound": 7
+              "total_upper_bound": 3
             },
             {
               "scenario_id": "dominant_member_01",
-              "search_requests": 5,
+              "search_requests": 0,
               "insights_requests": 4,
-              "total_upper_bound": 9
+              "total_upper_bound": 4
             },
             {
               "scenario_id": "niche_vs_mainstream_01",
-              "search_requests": 4,
+              "search_requests": 0,
               "insights_requests": 3,
-              "total_upper_bound": 7
+              "total_upper_bound": 3
             },
             {
               "scenario_id": "cross_domain_bridge_01",
-              "search_requests": 4,
+              "search_requests": 0,
               "insights_requests": 3,
-              "total_upper_bound": 7
+              "total_upper_bound": 3
             },
             {
               "scenario_id": "constraints_01",
-              "search_requests": 4,
+              "search_requests": 0,
               "insights_requests": 3,
-              "total_upper_bound": 7
+              "total_upper_bound": 3
             }
           ]
         }
       ],
-      "total_upper_bound": 55,
+      "total_upper_bound": 31,
       "bounds": "Insights calls per run are capped at 5 by Settings.qloo_max_insights_calls; no retries exist in the adapter, so a failed call is not repeated.",
       "authorisation": "required separately; not requested or used in v2"
     }

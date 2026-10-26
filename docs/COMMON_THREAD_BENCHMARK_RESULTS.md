@@ -16,7 +16,7 @@
 
 - HEAD descends from the required checkpoint: **True**
 - Production routes registered (from the live app's OpenAPI): 8/8
-- Production features present: 8/8
+- Production features present: 9/9
 
 Dataset: 48 scenarios, 16 development / 32 held-out. Reporting only; nothing in v2 was tuned, and no production weight, policy or configuration was changed.
 
@@ -26,28 +26,31 @@ Real `QlooClient` + real `resolve_entities` over mock `/search`. Gold: *syntheti
 
 | Subset | False automatic confirmation | Auto-confirm precision | Abstain rate | Unacceptable outcomes |
 |---|---|---|---|---|
-| All | 2/11 (18.2%) | 7/9 (77.8%) | 3/12 (25.0%) | 2/13 (15.4%) |
-| Development | 1/7 (14.3%) | 4/5 (80.0%) | 3/8 (37.5%) | 1/9 (11.1%) |
-| Held-out | 1/4 (25.0%) | 3/4 (75.0%) | 0/4 (0.0%) | 1/4 (25.0%) |
-| Exact-name homonyms | 2/3 (66.7%) | 1/3 (33.3%) | 0/3 (0.0%) | 2/3 (66.7%) |
+| All | 0/11 (0.0%) | 0/0 (n/a) | 12/12 (100.0%) | 0/13 (0.0%) |
+| Development | 0/7 (0.0%) | 0/0 (n/a) | 8/8 (100.0%) | 0/9 (0.0%) |
+| Held-out | 0/4 (0.0%) | 0/0 (n/a) | 4/4 (100.0%) | 0/4 (0.0%) |
+| Exact-name homonyms | 0/3 (0.0%) | 0/0 (n/a) | 3/3 (100.0%) | 0/3 (0.0%) |
+
+> **How to read this table.** It is a *policy* result, not an accuracy result. Production now binds nothing the user has not explicitly confirmed, so false automatic confirmation is 0 by construction and automatic-acceptance coverage is 0 (every unconfirmed phrase abstains and needs the user). It does **not** show that entity resolution is accurate: correctness now rests on the user choosing from Qloo's candidate list, whether the intended entity is *in* that list on the live service is unmeasured (live Recall@5 pending), a phrase with no candidate can never be confirmed, and the gold here is synthetic.
 
 | Case | Kind | Outcome | Acceptable |
 |---|---|---|---|
-| `g01_radiohead` | exact_unique | auto_correct | yes |
-| `g02_studio_ghibli` | exact_unique | auto_correct | yes |
-| `g03_phoenix` | exact_homonym_intended_not_first | auto_wrong | **NO** |
-| `g04_titanic` | exact_with_nonexact_distractor | auto_correct | yes |
-| `g05_interpol` | exact_homonym_intended_not_first | auto_wrong | **NO** |
-| `g06_pulp` | exact_with_nonexact_distractor | auto_correct | yes |
-| `g07_prince` | exact_with_nonexact_distractor | auto_correct | yes |
-| `g08_nirvana` | exact_homonym_intended_first | auto_correct | yes |
+| `g01_radiohead` | exact_unique | abstain | yes |
+| `g02_studio_ghibli` | exact_unique | abstain | yes |
+| `g03_phoenix` | exact_homonym_intended_not_first | abstain | yes |
+| `g04_titanic` | exact_with_nonexact_distractor | abstain | yes |
+| `g05_interpol` | exact_homonym_intended_not_first | abstain | yes |
+| `g06_pulp` | exact_with_nonexact_distractor | abstain | yes |
+| `g07_prince` | exact_with_nonexact_distractor | abstain | yes |
+| `g08_nirvana` | exact_homonym_intended_first | abstain | yes |
 | `g09_ghibli_short` | no_exact_intended_present | abstain | yes |
 | `g10_beatles_no_article` | no_exact_intended_present | abstain | yes |
 | `g11_unresolvable` | unresolvable_expected | abstain | yes |
-| `g12_case_normalization` | normalization | auto_correct | yes |
+| `g12_case_normalization` | normalization | abstain | yes |
 | `g13_phoenix_confirmed` | user_confirmed | confirmed_correct | yes |
 
-- User-confirmed overlay bypasses search: **True**; resolves to the intended entity: **True** (n=1).
+- Phrases submitted as typed (n=12): never searched **True**, never bound (always abstain) **True**, user asked to confirm **True**, zero Qloo requests **True**.
+- User-confirmed overlay bypasses search: **True**; resolves to the intended entity: **True** (n=1). Every case with an intended entity, confirmed through the simulated picker: resolves to the chosen entity **True** (n=12).
 - Gold entity id/type/disambiguation survive adapter + `/api/entities/search` unchanged: **True**.
 - `synthetic-arithmetic` — Recall@5 = 1.000, MRR = 0.833 over 12 author-written candidate lists. Recall@5/MRR over author-written candidate lists; verifies the metric maths only, not Qloo search quality (live, pending).
 
@@ -76,11 +79,11 @@ _Support is judged against the mock server's own served data; it shows the produ
 | affinity | 140/140 (100.0%) |
 | coverage_label | 221/221 (100.0%) |
 | explanation_count | 140/140 (100.0%) |
-| named_interest | 202/202 (100.0%) |
-| **all displayed claims** | **703/703 (100.0%)** |
+| named_interest | 203/203 (100.0%) |
+| **all displayed claims** | **704/704 (100.0%)** |
 
 - Identifier leaks into user-visible text: **0**.
-- Mapping completeness (fixture-credited interests that production displays): **202/331 (61.0%)** — see gap G1.
+- Mapping completeness (fixture-credited interests that production displays): **203/332 (61.1%)** — see gap G1.
 - Mock mode (`production-function`): all labelled synthetic = **True**, no Qloo-sourced interests = **True**, no affinity = **True**.
 
 ## 4. Ranking ablation (Experiment B) and end-to-end (Experiment A)
@@ -93,11 +96,11 @@ Fairness here is computed from each participant's own retrieval list, independen
 
 | Ranker | Provenance | Mean coverage | All servable served | Served within own top-5 | Worst-member best rank (↓) | Top-3 Jaccard vs production |
 |---|---|---|---|---|---|---|
-| `popularity` | synthetic-arithmetic | 1.000 | 15/15 (100.0%) | 14/15 (93.3%) | 2.800 | 0.393 |
-| `rank_aggregation` | synthetic-arithmetic | 1.000 | 15/15 (100.0%) | 15/15 (100.0%) | 1.000 | 0.593 |
-| `affinity_only` | synthetic-arithmetic | 1.000 | 15/15 (100.0%) | 15/15 (100.0%) | 1.400 | 0.693 |
+| `popularity` | synthetic-arithmetic | 1.000 | 15/15 (100.0%) | 14/15 (93.3%) | 2.800 | 0.413 |
+| `rank_aggregation` | synthetic-arithmetic | 1.000 | 15/15 (100.0%) | 15/15 (100.0%) | 1.000 | 0.560 |
+| `affinity_only` | synthetic-arithmetic | 1.000 | 15/15 (100.0%) | 15/15 (100.0%) | 1.400 | 0.727 |
 | `production` | production-function | 1.000 | 15/15 (100.0%) | 15/15 (100.0%) | 1.533 | 1.000 |
-| `production_no_affinity` | production-function | 1.000 | 15/15 (100.0%) | 15/15 (100.0%) | 1.667 | 0.900 |
+| `production_no_affinity` | production-function | 1.000 | 15/15 (100.0%) | 15/15 (100.0%) | 1.667 | 0.867 |
 
 **held_out**
 
@@ -105,25 +108,25 @@ Fairness here is computed from each participant's own retrieval list, independen
 |---|---|---|---|---|---|---|
 | `popularity` | synthetic-arithmetic | 0.956 | 28/32 (87.5%) | 28/32 (87.5%) | 2.179 | 0.431 |
 | `rank_aggregation` | synthetic-arithmetic | 0.992 | 31/32 (96.9%) | 31/32 (96.9%) | 1.097 | 0.697 |
-| `affinity_only` | synthetic-arithmetic | 0.982 | 30/32 (93.8%) | 30/32 (93.8%) | 1.500 | 0.691 |
-| `production` | production-function | 0.984 | 31/32 (96.9%) | 31/32 (96.9%) | 1.548 | 1.000 |
-| `production_no_affinity` | production-function | 0.984 | 31/32 (96.9%) | 31/32 (96.9%) | 1.613 | 0.953 |
+| `affinity_only` | synthetic-arithmetic | 0.982 | 30/32 (93.8%) | 30/32 (93.8%) | 1.467 | 0.675 |
+| `production` | production-function | 0.984 | 31/32 (96.9%) | 31/32 (96.9%) | 1.516 | 1.000 |
+| `production_no_affinity` | production-function | 0.984 | 31/32 (96.9%) | 31/32 (96.9%) | 1.645 | 0.938 |
 
 **all**
 
 | Ranker | Provenance | Mean coverage | All servable served | Served within own top-5 | Worst-member best rank (↓) | Top-3 Jaccard vs production |
 |---|---|---|---|---|---|---|
-| `popularity` | synthetic-arithmetic | 0.970 | 43/47 (91.5%) | 42/47 (89.4%) | 2.395 | 0.419 |
-| `rank_aggregation` | synthetic-arithmetic | 0.995 | 46/47 (97.9%) | 46/47 (97.9%) | 1.065 | 0.664 |
-| `affinity_only` | synthetic-arithmetic | 0.988 | 45/47 (95.7%) | 45/47 (95.7%) | 1.467 | 0.691 |
-| `production` | production-function | 0.989 | 46/47 (97.9%) | 46/47 (97.9%) | 1.543 | 1.000 |
-| `production_no_affinity` | production-function | 0.989 | 46/47 (97.9%) | 46/47 (97.9%) | 1.630 | 0.936 |
+| `popularity` | synthetic-arithmetic | 0.970 | 43/47 (91.5%) | 42/47 (89.4%) | 2.395 | 0.426 |
+| `rank_aggregation` | synthetic-arithmetic | 0.995 | 46/47 (97.9%) | 46/47 (97.9%) | 1.065 | 0.653 |
+| `affinity_only` | synthetic-arithmetic | 0.988 | 45/47 (95.7%) | 45/47 (95.7%) | 1.444 | 0.691 |
+| `production` | production-function | 0.989 | 46/47 (97.9%) | 46/47 (97.9%) | 1.522 | 1.000 |
+| `production_no_affinity` | production-function | 0.989 | 46/47 (97.9%) | 46/47 (97.9%) | 1.652 | 0.915 |
 
 **Experiment A (all)** — process metrics only
 
 | Method | Executed | Mean coverage | All servable served | Worst-member best rank (↓) |
 |---|---|---|---|---|
-| `full_common_thread` | yes | 0.989 | 46/47 (97.9%) | 1.630 |
+| `full_common_thread` | yes | 0.989 | 46/47 (97.9%) | 1.609 |
 | `popularity_baseline` | yes | 0.970 | 43/47 (91.5%) | 2.395 |
 | `llm_only` | **PENDING** | n/a | n/a | n/a |
 
@@ -131,39 +134,37 @@ Fairness here is computed from each participant's own retrieval list, independen
 
 ## 5. Fault resilience — `mocked-integration`, end to end
 
-end-to-end: mock HTTP -> QlooClient -> workflow -> FastAPI route. Expectations come from `docs/API_CONTRACTS.md`. **35/35** rows meet the contract; raw-body/secret/stack-trace leaks: **0**.
+end-to-end: mock HTTP -> QlooClient -> workflow -> FastAPI route. Expectations come from `docs/API_CONTRACTS.md`. **33/33** rows meet the contract; raw-body/secret/stack-trace leaks: **0**.
 
 | Route | Stage | Fault | Call | Expected | Observed | Code | Requests |
 |---|---|---|---|---|---|---|---|
-| recommendations | search | http_400 | all | 503 | 503 | QLOO_BAD_REQUEST | 3 |
-| recommendations | search | http_401 | all | 503 | 503 | QLOO_AUTH_ERROR | 1 |
-| recommendations | search | http_403 | all | 503 | 503 | QLOO_AUTH_ERROR | 1 |
-| recommendations | search | http_429 | all | 503 | 503 | QLOO_RATE_LIMIT | 1 |
-| recommendations | search | http_500 | all | 503 | 503 | QLOO_UPSTREAM_ERROR | 3 |
-| recommendations | search | timeout | all | 503 | 503 | QLOO_TIMEOUT | 3 |
-| recommendations | search | connect_error | all | 503 | 503 | QLOO_NETWORK_ERROR | 3 |
-| recommendations | search | invalid_json | all | 503 | 503 | QLOO_INVALID_JSON | 3 |
-| recommendations | search | not_object | all | 503 | 503 | QLOO_BAD_RESPONSE | 3 |
-| recommendations | search | empty | all | 200_failed | 200_failed | - | 3 |
-| recommendations | search | malformed_items | all | 200_failed | 200_failed | - | 3 |
-| recommendations | search | missing_results_key | all | 200_failed | 200_failed | - | 3 |
-| recommendations | insights | http_400 | all | 503 | 503 | QLOO_BAD_REQUEST | 4 |
-| recommendations | insights | http_401 | all | 503 | 503 | QLOO_AUTH_ERROR | 4 |
-| recommendations | insights | http_403 | all | 503 | 503 | QLOO_AUTH_ERROR | 4 |
-| recommendations | insights | http_429 | all | 503 | 503 | QLOO_RATE_LIMIT | 4 |
-| recommendations | insights | http_500 | all | 503 | 503 | QLOO_UPSTREAM_ERROR | 4 |
-| recommendations | insights | timeout | all | 503 | 503 | QLOO_TIMEOUT | 4 |
-| recommendations | insights | connect_error | all | 503 | 503 | QLOO_NETWORK_ERROR | 4 |
-| recommendations | insights | invalid_json | all | 503 | 503 | QLOO_INVALID_JSON | 4 |
-| recommendations | insights | not_object | all | 503 | 503 | QLOO_BAD_RESPONSE | 4 |
-| recommendations | insights | empty | all | 200_failed | 200_failed | - | 6 |
-| recommendations | insights | malformed_items | all | 200_failed | 200_failed | - | 6 |
-| recommendations | insights | missing_results_key | all | 200_failed | 200_failed | - | 6 |
-| recommendations | insights | http_500 | 2 | 200_partial | 200_partial | - | 5 |
-| recommendations | insights | timeout | 3 | 200_partial | 200_partial | - | 6 |
-| recommendations | search | timeout | all | 200_partial | 200_partial | - | 6 |
-| recommendations | search | http_429 | 1 | 503 | 503 | QLOO_RATE_LIMIT | 1 |
-| recommendations | search | malformed_items | all | 200_partial | 200_partial | - | 6 |
+| recommendations | search | http_400 | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | http_401 | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | http_403 | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | http_429 | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | http_500 | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | timeout | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | connect_error | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | invalid_json | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | not_object | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | empty | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | malformed_items | all | 200_ok | 200_ok | - | 3 |
+| recommendations | search | missing_results_key | all | 200_ok | 200_ok | - | 3 |
+| recommendations | insights | http_400 | all | 503 | 503 | QLOO_BAD_REQUEST | 1 |
+| recommendations | insights | http_401 | all | 503 | 503 | QLOO_AUTH_ERROR | 1 |
+| recommendations | insights | http_403 | all | 503 | 503 | QLOO_AUTH_ERROR | 1 |
+| recommendations | insights | http_429 | all | 503 | 503 | QLOO_RATE_LIMIT | 1 |
+| recommendations | insights | http_500 | all | 503 | 503 | QLOO_UPSTREAM_ERROR | 1 |
+| recommendations | insights | timeout | all | 503 | 503 | QLOO_TIMEOUT | 1 |
+| recommendations | insights | connect_error | all | 503 | 503 | QLOO_NETWORK_ERROR | 1 |
+| recommendations | insights | invalid_json | all | 503 | 503 | QLOO_INVALID_JSON | 1 |
+| recommendations | insights | not_object | all | 503 | 503 | QLOO_BAD_RESPONSE | 1 |
+| recommendations | insights | empty | all | 200_failed | 200_failed | - | 3 |
+| recommendations | insights | malformed_items | all | 200_failed | 200_failed | - | 3 |
+| recommendations | insights | missing_results_key | all | 200_failed | 200_failed | - | 3 |
+| recommendations | insights | http_500 | 2 | 200_partial | 200_partial | - | 2 |
+| recommendations | insights | timeout | 3 | 200_partial | 200_partial | - | 3 |
+| recommendations_unconfirmed | None | None | all | 200_failed | 200_failed | - | 0 |
 | entities | search | http_429 | all | 503 | 503 | QLOO_RATE_LIMIT | 1 |
 | entities | search | http_500 | all | 503 | 503 | QLOO_UPSTREAM_ERROR | 1 |
 | entities | search | timeout | all | 503 | 503 | QLOO_TIMEOUT | 1 |
@@ -179,13 +180,13 @@ end-to-end: mock HTTP -> QlooClient -> workflow -> FastAPI route. Expectations c
 
 **Requests made in v2: 0.** none. The 43-request v1 spike ran against the stale 2b3f56c adapter and is historical, not evidence about the checkpoint.
 
-Budget a subsequent, separately authorised validation would need (**upper bound 55**):
+Budget a subsequent, separately authorised validation would need (**upper bound 31**):
 
 | Phase | Requests |
 |---|---|
 | L0 reachability probe of the checkpoint adapter | 1 |
 | L1 entity-resolution gold: one /search per distinct gold query, to replace synthetic ids with reviewed real ids and measure real Recall@5/MRR | 11 |
-| L2 six representative scenarios through the checkpoint workflow | 43 |
+| L2 six representative scenarios through the checkpoint workflow | 19 |
 
 Insights calls per run are capped at 5 by Settings.qloo_max_insights_calls; no retries exist in the adapter, so a failed call is not repeated.
 

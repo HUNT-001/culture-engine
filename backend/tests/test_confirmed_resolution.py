@@ -1,5 +1,8 @@
-"""Workflow-level resolution correctness: confirmed entities bypass search; unconfirmed
-interests are auto-accepted only on an exact name match, never a silent first result."""
+"""Workflow-level resolution correctness: only user-confirmed entities are bound.
+
+An unconfirmed interest is never searched for, never taken from a first result and never
+accepted on an exact-name match; it is excluded and reported for the user to confirm.
+See also ``test_resolution_safety.py`` for the route-level regression tests."""
 import pytest
 
 from app.domain.schemas import Candidate, RecommendationRequest
@@ -49,7 +52,7 @@ async def test_confirmed_interest_is_used_without_searching():
 
 
 @pytest.mark.asyncio
-async def test_unconfirmed_exact_match_is_auto_accepted():
+async def test_unconfirmed_exact_name_match_is_not_auto_accepted():
     qloo = FakeQloo(search_results={
         "indie rock": [{"entity_id": "IR", "name": "Indie Rock", "entity_type": "urn:tag"}],
         "jazz": [{"entity_id": "JZ", "name": "Jazz"}],
@@ -63,18 +66,15 @@ async def test_unconfirmed_exact_match_is_auto_accepted():
         ],
     })
     state = await graph.ainvoke({"request": request.model_dump()})
-    assert state["unresolved_interests"] == []
-    flat_ids = [eid for call in qloo.insights_calls for eid in call]
-    assert "IR" in flat_ids and "JZ" in flat_ids
+    # Even though each typed name equals a result's name exactly, neither is bound.
+    assert state["unresolved_interests"] == ["Ana: indie rock", "Ben: jazz"]
+    assert qloo.searched == [] and qloo.insights_calls == []
 
 
 @pytest.mark.asyncio
-async def test_ambiguous_result_is_left_unresolved_not_first_match():
-    # Search returns a plausible-but-non-exact entity; it must NOT be silently accepted.
+async def test_unconfirmed_interest_is_never_taken_from_a_first_result():
     qloo = FakeQloo(search_results={
-        "independent film": [
-            {"entity_id": "DOC", "name": "The Independent Film Handbook"},
-        ],
+        "independent film": [{"entity_id": "DOC", "name": "The Independent Film Handbook"}],
         "jazz": [{"entity_id": "JZ", "name": "Jazz"}],
     })
     graph = build_recommendation_graph(qloo, DeterministicComposer(), demo_mode=False, max_calls=5)
@@ -82,15 +82,15 @@ async def test_ambiguous_result_is_left_unresolved_not_first_match():
         "location": "New York",
         "participants": [
             {"participant_id": "p1", "display_name": "Ana", "interests": ["independent film"]},
-            {"participant_id": "p2", "display_name": "Ben", "interests": ["jazz"]},
+            {"participant_id": "p2", "display_name": "Ben", "interests": ["jazz"],
+             "resolved_interests": [{"text": "jazz", "entity_id": "JZ", "name": "Jazz"}]},
         ],
     })
     state = await graph.ainvoke({"request": request.model_dump()})
-    # The non-exact match is reported unresolved, and its id never reaches Insights.
     assert any("independent film" in u for u in state["unresolved_interests"])
     flat_ids = [eid for call in qloo.insights_calls for eid in call]
     assert "DOC" not in flat_ids
-    assert "JZ" in flat_ids  # the exact one still goes through
+    assert "JZ" in flat_ids  # the confirmed one still goes through
 
 
 @pytest.mark.asyncio
@@ -107,5 +107,5 @@ async def test_confirmed_overlay_for_other_text_does_not_apply():
         ],
     })
     state = await graph.ainvoke({"request": request.model_dump()})
-    # "opera" has no confirmation and no exact search match -> unresolved; JZ not misapplied to it.
+    # "opera" has no confirmation -> unresolved; the jazz confirmation is not misapplied to it.
     assert any("opera" in u for u in state["unresolved_interests"])

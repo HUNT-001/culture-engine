@@ -33,7 +33,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -68,7 +67,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -121,7 +119,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -165,7 +162,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -209,7 +205,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -253,7 +248,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -297,7 +291,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -341,7 +334,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -376,7 +368,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -411,7 +402,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -464,7 +454,6 @@
       },
       "user_confirmation": null,
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],
@@ -519,7 +508,6 @@
         "entity_id": "artist:phoenix-band"
       },
       "acceptable_outcomes": [
-        "auto_correct",
         "abstain",
         "confirmed_correct"
       ],

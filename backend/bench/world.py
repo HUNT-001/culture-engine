@@ -88,6 +88,9 @@ class World:
     interests: dict[str, InterestEntity]      # entity_id -> entity
     search_index: dict[str, list[str]]        # casefold query -> ordered entity_ids
     noisy_explainability: bool = True
+    # casefold query -> the entity a user who *means* this phrase would pick in the picker.
+    # Absent for phrases with no entity (deliberately unresolvable). Never used by production.
+    intended: dict[str, str] = field(default_factory=dict)
 
     def place(self, place_id: str) -> Place:
         return next(p for p in self.places if p.entity_id == place_id)
@@ -183,6 +186,7 @@ def build_world(scenario: Scenario, *, noisy_explainability: bool = True) -> Wor
 
     interests: dict[str, InterestEntity] = {}
     search_index: dict[str, list[str]] = {}
+    intended: dict[str, str] = {}
     seen: set[str] = set()
     for term in scenario.all_interests():
         key = term.casefold()
@@ -200,17 +204,21 @@ def build_world(scenario: Scenario, *, noisy_explainability: bool = True) -> Wor
                 interests[ent.entity_id] = ent
                 ids.append(ent.entity_id)
             search_index[key] = ids
+            if gold[key]["intended"]:
+                intended[key] = gold[key]["intended"]["entity_id"]
             continue
         ent = InterestEntity(_uuid(scenario.id, "interest", key), term.strip(),
                              ["urn:tag"], None, round(0.5 + 0.5 * rng.random(), 4))
         interests[ent.entity_id] = ent
         search_index[key] = [ent.entity_id]
+        intended[key] = ent.entity_id
 
     entity_ids = sorted(interests)  # stable assignment order
     mode = OVERLAP_MODE.get(scenario.category, "moderate")
     for eid, pids in _assign_rankings(rng, mode, entity_ids, place_ids).items():
         interests[eid].ranking = _with_affinities(eid, pids)
-    return World(scenario.id, places, interests, search_index, noisy_explainability)
+    return World(scenario.id, places, interests, search_index, noisy_explainability,
+                 intended)
 
 
 def build_gold_world(case: dict, control_term: str = "jazz") -> World:
@@ -225,6 +233,9 @@ def build_gold_world(case: dict, control_term: str = "jazz") -> World:
     place_ids = [p.entity_id for p in places]
     interests: dict[str, InterestEntity] = {}
     search_index: dict[str, list[str]] = {case["query"].strip().casefold(): []}
+    intended: dict[str, str] = {}
+    if case["intended"]:
+        intended[case["query"].strip().casefold()] = case["intended"]["entity_id"]
     for cand in case["candidates"]:
         ent = InterestEntity(cand["entity_id"], cand["name"], list(cand["types"]),
                              cand.get("disambiguation"), cand["popularity"])
@@ -233,7 +244,8 @@ def build_gold_world(case: dict, control_term: str = "jazz") -> World:
     ctrl = InterestEntity(_uuid(sid, "control"), control_term, ["urn:tag"], None, 0.5)
     interests[ctrl.entity_id] = ctrl
     search_index[control_term.casefold()] = [ctrl.entity_id]
+    intended[control_term.casefold()] = ctrl.entity_id
     eids = sorted(interests)
     for eid, pids in _assign_rankings(rng, "moderate", eids, place_ids).items():
         interests[eid].ranking = _with_affinities(eid, pids)
-    return World(sid, places, interests, search_index)
+    return World(sid, places, interests, search_index, intended=intended)

@@ -143,15 +143,19 @@ def test_no_ground_truth_is_assigned_from_search_order():
         assert "gold_entity_id" not in q
 
 
-def test_policy_observation_uses_the_real_exact_match_on_the_top_three():
+def test_ambiguity_observation_records_homonyms_without_any_auto_accept():
     result, *_ = _run()
     by = {q["query"]: q for q in result["queries"]}
-    phoenix = by["Phoenix"]["production_policy_observation"]
-    assert phoenix["outcome_top3"] == "auto_accept" and phoenix["auto_accepted_rank"] == 1
-    assert phoenix["n_exact_name_candidates_in_list"] == 2         # city and band share the name
-    assert by["Pulp"]["production_policy_observation"]["auto_accepted_rank"] == 2
-    assert by["Ghibli"]["production_policy_observation"]["outcome_top3"] == "abstain"
+    phoenix = by["Phoenix"]["ambiguity_observation"]
+    assert phoenix["exact_name_is_ambiguous"] and phoenix["n_exact_name_candidates"] == 2
+    assert phoenix["n_exact_name_entity_types"] == 2          # a city and a band share the name
+    assert by["Ghibli"]["ambiguity_observation"]["no_exact_name_candidate"] is True
+    assert by["Radiohead"]["ambiguity_observation"]["exact_name_is_ambiguous"] is False
     assert by["zzqqxx nonexistent genre"]["candidates"] == []
+    for q in result["queries"]:
+        obs = q["ambiguity_observation"]
+        assert "auto" not in " ".join(k for k in obs if k != "production_policy")
+        assert "nothing is auto-accepted" in obs["production_policy"]
 
 
 def test_application_head_and_provenance_are_recorded():

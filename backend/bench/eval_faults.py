@@ -14,6 +14,11 @@ what production happens to do:
 * 200 with warnings for a valid but limited result;
 * never return raw provider bodies, stack traces or secrets.
 
+Since the resolution safety fix the recommendation workflow makes **no** ``/search`` request
+(only user-confirmed interests are used), so a ``/search`` fault cannot affect it; those rows
+assert exactly that (``200_ok`` with zero search requests). ``/search`` failures matter to the
+picker route (``/api/entities/search``), which keeps its own rows.
+
 Provenance: ``mocked-integration``. A simulated ``ReadTimeout`` exercises the adapter's
 exception handling, not real timer/socket behaviour.
 """
@@ -52,17 +57,18 @@ def _row(route, stage, kind, nth, query, expect):
 
 def matrix() -> list[dict]:
     rows = []
-    for stage in ("search", "insights"):
-        for kind in PROVIDER_FAILURES:
-            rows.append(_row("recommendations", stage, kind, None, None, "503"))
-        for kind in BENIGN_EMPTY:
-            rows.append(_row("recommendations", stage, kind, None, None, "200_failed"))
+    for kind in PROVIDER_FAILURES + BENIGN_EMPTY:
+        # The workflow never searches, so a /search fault is never reached.
+        rows.append(_row("recommendations", "search", kind, None, None, "200_ok"))
+    for kind in PROVIDER_FAILURES:
+        rows.append(_row("recommendations", "insights", kind, None, None, "503"))
+    for kind in BENIGN_EMPTY:
+        rows.append(_row("recommendations", "insights", kind, None, None, "200_failed"))
     rows += [
         _row("recommendations", "insights", "http_500", 2, None, "200_partial"),   # p2 query fails
         _row("recommendations", "insights", "timeout", 3, None, "200_partial"),    # combined fails
-        _row("recommendations", "search", "timeout", None, "indie films", "200_partial"),
-        _row("recommendations", "search", "http_429", 1, None, "503"),             # fatal code
-        _row("recommendations", "search", "malformed_items", None, "indie films", "200_partial"),
+        # Interests submitted as typed (never confirmed): excluded, disclosed, zero requests.
+        _row("recommendations_unconfirmed", None, None, None, None, "200_failed"),
         _row("entities", "search", "http_429", None, None, "503"),
         _row("entities", "search", "http_500", None, None, "503"),
         _row("entities", "search", "timeout", None, None, "503"),
@@ -93,17 +99,22 @@ def run_row(row: dict) -> dict:
     scenario = scenarios_by_id()[SCENARIO]
     world = build_world(scenario)
     q = row["query"].casefold() if row["query"] else None
-    fault = Fault(row["stage"], row["kind"], row["nth"], q)
+    faults = (Fault(row["stage"], row["kind"], row["nth"], q),) if row["kind"] else ()
     if row["route"] == "entities":
-        res = route_get("/api/entities/search", {"query": "Radiohead", "take": 3}, world, (fault,))
+        res = route_get("/api/entities/search", {"query": "Radiohead", "take": 3}, world, faults)
     else:
-        res = route_call(scenario.request_payload(), world, (fault,))
+        res = route_call(scenario.request_payload(), world, faults,
+                         confirm=row["route"] != "recommendations_unconfirmed")
     family = _family(row["route"], res)
     leaked = [m for m in LEAK_MARKERS if m in res.text]
     detail = res.body.get("detail") if isinstance(res.body, dict) else None
     code = detail.get("code") if isinstance(detail, dict) else None
     warnings = res.body.get("warnings", []) if isinstance(res.body, dict) else []
     ok = family == row["expect"] and not leaked
+    if row["route"] != "entities" and row["stage"] in (None, "search"):
+        ok = ok and res.mock.count("search") == 0       # the workflow must not search at all
+    if row["route"] == "recommendations_unconfirmed":
+        ok = ok and res.mock.count() == 0 and bool(res.body.get("needs_confirmation"))
     if row["expect"] in ("200_failed", "200_partial") and family.startswith("200"):
         ok = ok and bool(warnings or res.body.get("unresolved_interests"))
     return {
@@ -111,7 +122,7 @@ def run_row(row: dict) -> dict:
         "n_options": len(res.body.get("options", [])) if isinstance(res.body, dict)
         and "options" in res.body else None,
         "n_warnings": len(warnings), "leaked": leaked, "meets_contract": ok,
-        "qloo_requests": res.mock.count(),
+        "qloo_requests": res.mock.count(), "search_requests": res.mock.count("search"),
     }
 
 

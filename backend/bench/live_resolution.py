@@ -10,8 +10,11 @@
 * Qloo-derived output is **not** committed: write it outside the repository or under the
   git-ignored ``bench/results/live/``. The hackathon guide forbids copying Qloo responses into
   a public repository.
-* No ground truth is assigned from search order. Candidate lists are for human review; the
-  production policy outcome (``exact_match`` on the top 3) is recorded as an *observation*.
+* No ground truth is assigned from search order. Candidate lists are for human review.
+  Production no longer auto-accepts any search result (resolution safety fix), so the only
+  policy facts recorded per query are *observations of ambiguity*: how many returned
+  candidates share the typed name exactly, and across how many entity types. These are the
+  situations in which a silent exact-name acceptance would have been unsafe.
   Recall@5 / MRR are computed only for cases a reviewer has marked independently verified.
 
 Provenance of everything produced here: ``live-request``.
@@ -26,7 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from app.providers.qloo import QlooProviderError
-from app.services.resolution import exact_match, normalize_name
+from app.services.resolution import normalize_name
 from bench import baseline_guard
 from bench import metrics as M
 from bench.gold import build_cases
@@ -35,7 +38,6 @@ from bench.provenance import LIVE_REQUEST
 HARD_CAP = 12
 PROBE = {"query": "jazz", "take": 3}      # a common tag, deliberately not one of the 11
 LIST_TAKE = 5                              # the picker's default; enough for Recall@5
-PRODUCTION_TAKE = 3                        # resolve_entities calls search_entities(term, take=3)
 FATAL = {"QLOO_AUTH_ERROR", "QLOO_RATE_LIMIT"}
 BACKEND = Path(__file__).resolve().parent.parent
 
@@ -103,21 +105,21 @@ def _shape(items: list[dict]) -> list[str]:
 
 
 def _policy_observation(term: str, matches: list[dict]) -> dict:
-    """What the production auto-resolver would do. An observation, never ground truth."""
-    top3 = matches[:PRODUCTION_TAKE]
-    picked3 = exact_match(term, top3)
-    picked5 = exact_match(term, matches)
+    """What would have made a silent name-based acceptance unsafe. An observation only.
+
+    Production now requires explicit user confirmation for every interest, so no outcome is
+    "auto-accepted"; this records how ambiguous the returned list is.
+    """
     target = normalize_name(term)
+    exact = [m for m in matches if normalize_name(str(m.get("name", ""))) == target]
+    exact_types = {str(m.get("entity_type") or "unknown") for m in exact}
     return {
-        "production_sees": f"top {PRODUCTION_TAKE} (assumes the first {PRODUCTION_TAKE} of this "
-                           f"list equal a take={PRODUCTION_TAKE} request)",
-        "outcome_top3": "auto_accept" if picked3 else "abstain",
-        "auto_accepted_entity_id": str(picked3["entity_id"]) if picked3 else None,
-        "auto_accepted_rank": (top3.index(picked3) + 1) if picked3 else None,
-        "exact_match_would_change_with_top5": (
-            (picked5 or {}).get("entity_id") != (picked3 or {}).get("entity_id")),
-        "n_exact_name_candidates_in_list": sum(
-            1 for m in matches if normalize_name(str(m.get("name", ""))) == target),
+        "production_policy": "requires explicit user confirmation; nothing is auto-accepted",
+        "n_candidates": len(matches),
+        "n_exact_name_candidates": len(exact),
+        "n_exact_name_entity_types": len(exact_types),
+        "exact_name_is_ambiguous": len(exact) > 1,
+        "no_exact_name_candidate": not exact and bool(matches),
     }
 
 
@@ -175,7 +177,7 @@ async def run(provider, *, cap: int = HARD_CAP) -> dict:
             latency_ms=round((time.perf_counter() - start) * 1000, 1),
             item_keys_observed=_shape(matches),
             candidates=[minimal_candidate(i, m) for i, m in enumerate(matches, start=1)],
-            production_policy_observation=_policy_observation(entry["query"], matches),
+            ambiguity_observation=_policy_observation(entry["query"], matches),
         )
         out["queries"].append(row)
     return out

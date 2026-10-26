@@ -10,8 +10,9 @@ type Props = {
   idPrefix: string
 }
 
-/** Per-interest entity confirmation: type -> search Qloo -> confirm a candidate, retry,
- *  or leave it unconfirmed (the backend then accepts only an exact match, else unresolved). */
+/** Per-interest entity confirmation: type -> search Qloo -> explicitly pick the entity you
+ *  mean. Every interest must be confirmed (or removed) before the form can be submitted;
+ *  the server never accepts a first result or an exact-name match on the user's behalf. */
 export default function InterestPicker({ rows, onChange, idPrefix }: Props) {
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [errorById, setErrorById] = useState<Record<string, string>>({})
@@ -107,16 +108,16 @@ export default function InterestPicker({ rows, onChange, idPrefix }: Props) {
                     </span>
                   </button>
                 ))}
-                <p className="pick-note">None right? Edit the text and search again, or leave it as typed.</p>
+                <p className="pick-note">None right? Edit the text and search again, or remove this interest.</p>
               </div>
             )}
 
             {status === 'unconfirmed' && row.searched && row.candidates.length === 0 && (
-              <p className="pick-note">No matches found. It will stay unconfirmed and may be left unresolved.</p>
+              <p className="pick-note warn">No matches found. Edit the text and search again, or remove this interest — it can&rsquo;t be used until you confirm an entity.</p>
             )}
 
             {status === 'unconfirmed' && !row.searched && (
-              <p className="pick-note">Not confirmed yet — search to confirm, or leave as typed (exact matches are auto-accepted).</p>
+              <p className="pick-note warn">Not confirmed yet — search and pick the entity you mean. Unconfirmed interests can&rsquo;t be used.</p>
             )}
           </div>
         )

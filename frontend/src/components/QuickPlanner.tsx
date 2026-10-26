@@ -60,7 +60,9 @@ export default function QuickPlanner({ onMode }: Props) {
     participants.forEach((p, i) => {
       const label = p.display_name.trim() || `Participant ${i + 1}`
       if (!p.display_name.trim()) errors.push(`Participant ${i + 1} needs a name.`)
-      if (validateInterestRows(p.rows).length) errors.push(`${label} needs at least one interest.`)
+      for (const message of validateInterestRows(p.rows)) {
+        errors.push(message.startsWith('Add at least') ? `${label} needs at least one interest.` : `${label}: ${message}`)
+      }
     })
     return errors
   }
@@ -157,8 +159,8 @@ export default function QuickPlanner({ onMode }: Props) {
             <span className="small-muted">{participantCount}/{MAX_PARTICIPANTS} people</span>
           </div>
           <p className="helper">
-            Add each friend and their interests. Search to confirm which Qloo entity you mean, or
-            leave it as typed — exact matches are auto-accepted, ambiguous ones stay unresolved.
+            Add each friend and their interests. Search and pick the Qloo entity you mean for every
+            interest — nothing is matched automatically, so each one needs your confirmation.
           </p>
           <div className="participants-list">
             {participants.map((person, index) => (

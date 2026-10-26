@@ -121,7 +121,10 @@ def replace_preferences(
 def save_run(db: Session, plan: PlanModel, run_id: str, result: dict, status: str) -> RecommendationRunModel:
     run = RecommendationRunModel(id=run_id, plan_id=plan.id, status=status, result_json=result)
     db.add(run)
-    plan.status = "recommended"
+    if status != "failed":
+        # A run that produced nothing (e.g. no interest confirmed) is kept for display but
+        # must not mark the plan as recommended.
+        plan.status = "recommended"
     db.commit()
     return run
 

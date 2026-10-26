@@ -1,5 +1,6 @@
 """Pure interest-resolution policy helpers."""
-from app.services.resolution import confirmed_index, exact_match, normalize_name
+from app.services import resolution
+from app.services.resolution import confirmed_index, normalize_name
 
 
 def test_normalize_name_casefolds_and_collapses_whitespace():
@@ -8,24 +9,9 @@ def test_normalize_name_casefolds_and_collapses_whitespace():
     assert normalize_name(123) == ""  # type: ignore[arg-type]
 
 
-def test_exact_match_requires_normalized_name_equality():
-    matches = [
-        {"entity_id": "1", "name": "The Independent Film Handbook"},
-        {"entity_id": "2", "name": "Independent Film"},
-    ]
-    picked = exact_match("independent film", matches)
-    assert picked is not None and picked["entity_id"] == "2"
-
-
-def test_exact_match_returns_none_when_no_exact_name():
-    matches = [{"entity_id": "1", "name": "The Independent Film Handbook"}]
-    assert exact_match("independent film", matches) is None
-
-
-def test_exact_match_handles_empty_and_malformed():
-    assert exact_match("", [{"entity_id": "1", "name": "x"}]) is None
-    assert exact_match("x", []) is None
-    assert exact_match("x", [{"entity_id": "1"}, "not-a-dict", {"name": 5}]) is None
+def test_no_name_based_auto_acceptance_helper_exists():
+    """The server must not offer a way to bind an unconfirmed phrase by name."""
+    assert not hasattr(resolution, "exact_match")
 
 
 def test_confirmed_index_keys_by_normalized_text():

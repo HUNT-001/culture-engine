@@ -1,9 +1,14 @@
 """Run the REAL workflow / API route against a Qloo-shaped mock world.
 
 Everything between the mock transport and the API response is production code:
-``QlooClient`` (parsing + error mapping) -> ``resolve_entities`` (exact-match /
-confirmation policy) -> ``retrieve_insights`` -> merge/dislike filter/rank/select ->
+``QlooClient`` (parsing + error mapping) -> ``resolve_entities`` (binds ONLY
+user-confirmed interests) -> ``retrieve_insights`` -> merge/dislike filter/rank/select ->
 evidence mapping -> composer -> output validation -> (optionally) the FastAPI route.
+
+Production never binds an unconfirmed phrase to an entity, so a scenario run first applies
+``with_user_confirmation``: a *simulated user* who picks the world's intended entity for each
+phrase (no mock request is made for this; it stands in for the picker UI). Pass
+``confirm=False`` to submit the phrases exactly as typed and observe the unconfirmed path.
 
 Provenance of anything produced here: ``mocked-integration``.
 """
@@ -68,10 +73,37 @@ class Run:
         return [o["candidate"]["name"] for o in self.options]
 
 
+def with_user_confirmation(payload: dict, world: World) -> dict:
+    """Return a copy of ``payload`` in which a simulated user confirmed each interest.
+
+    A phrase gets a ``resolved_interests`` entry only if the world has an intended entity
+    for it; phrases with none (deliberately unresolvable) stay unconfirmed. Entries the
+    payload already carries are kept. Typed wording is never altered.
+    """
+    out = copy.deepcopy(payload)
+    for participant in out.get("participants", []):
+        have = {r["text"].strip().casefold() for r in participant.get("resolved_interests", [])}
+        extra = []
+        for term in participant.get("interests", []):
+            key = term.strip().casefold()
+            entity = world.interests.get(world.intended.get(key, ""))
+            if entity is None or key in have:
+                continue
+            have.add(key)
+            extra.append({"text": term, "entity_id": entity.entity_id, "name": entity.name,
+                          "entity_type": entity.types[0] if entity.types else "unknown"})
+        if extra:
+            participant["resolved_interests"] = [*participant.get("resolved_interests", []),
+                                                 *extra]
+    return out
+
+
 async def run_workflow(
     payload: dict, world: World, faults: tuple[Fault, ...] = (), *,
-    max_calls: int = MAX_CALLS, scenario_id: str | None = None,
+    max_calls: int = MAX_CALLS, scenario_id: str | None = None, confirm: bool = True,
 ) -> Run:
+    if confirm:
+        payload = with_user_confirmation(payload, world)
     mock = QlooMock(world, faults)
     client = build_client(mock)
     graph = build_recommendation_graph(client, DeterministicComposer(), demo_mode=False,
@@ -93,17 +125,35 @@ def run_workflow_sync(*args, **kwargs) -> Run:
 
 def run_scenario(scenario: Scenario, *, faults: tuple[Fault, ...] | None = None,
                  payload: dict | None = None, world: World | None = None,
-                 max_calls: int = MAX_CALLS) -> Run:
+                 max_calls: int = MAX_CALLS, confirm: bool = True) -> Run:
     world = world or build_world(scenario)
     if faults is None:
         faults = faults_from_scenario(scenario.fault_injection)
     return run_workflow_sync(payload or scenario.request_payload(), world, faults,
-                             max_calls=max_calls, scenario_id=scenario.id)
+                             max_calls=max_calls, scenario_id=scenario.id, confirm=confirm)
 
 
-def run_demo_mode(payload: dict) -> Run:
+def _demo_confirmation(payload: dict, mock: MockQlooClient) -> dict:
+    """A simulated user picks the first *mock* candidate the demo picker offers per phrase."""
+    out = copy.deepcopy(payload)
+    for participant in out["participants"]:
+        resolved = []
+        for term in participant["interests"]:
+            found = asyncio.run(mock.search_entities(term, 1))
+            if found:
+                resolved.append({"text": term, "entity_id": found[0]["entity_id"],
+                                 "name": found[0]["name"],
+                                 "entity_type": found[0].get("entity_type", "unknown")})
+        participant["resolved_interests"] = resolved
+    return out
+
+
+def run_demo_mode(payload: dict, *, confirm: bool = True) -> Run:
     """The production mock path (MockQlooClient, demo_mode=True), for mock-vs-live checks."""
-    graph = build_recommendation_graph(MockQlooClient(), DeterministicComposer(),
+    mock = MockQlooClient()
+    if confirm:
+        payload = _demo_confirmation(payload, mock)
+    graph = build_recommendation_graph(mock, DeterministicComposer(),
                                        demo_mode=True, max_calls=MAX_CALLS)
     state = asyncio.run(graph.ainvoke({"request": copy.deepcopy(payload)}))
     return Run("demo-mode", state, None, execution_mode="production-mock-provider")
@@ -118,8 +168,10 @@ class RouteResult:
 
 
 def route_call(payload: dict, world: World, faults: tuple[Fault, ...] = (), *,
-               path: str = "/api/recommendations") -> RouteResult:
+               path: str = "/api/recommendations", confirm: bool = True) -> RouteResult:
     """POST through the real FastAPI route with a real QlooClient over the mock transport."""
+    if confirm:
+        payload = with_user_confirmation(payload, world)
     from fastapi.testclient import TestClient  # lazy: needs isolate_environment() first
 
     from app.main import app

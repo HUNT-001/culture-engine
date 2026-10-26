@@ -29,10 +29,18 @@ def join(client, plan, name):
     return response
 
 
-def set_prefs(client, plan, participant, interests, dislikes=None):
+def confirmed(*terms):
+    """Interests the user explicitly confirmed in the picker (synthetic demo entity ids)."""
+    unique = dict.fromkeys(t.strip() for t in terms if t.strip())
+    return [{"text": t, "entity_id": f"demo:interest:{t}", "name": t, "entity_type": "demo"}
+            for t in unique]
+
+
+def set_prefs(client, plan, participant, interests, dislikes=None, confirm=True):
     return client.put(
         f"/api/plans/{plan['plan_id']}/participants/{participant['participant_id']}/preferences",
-        json={"interests": interests, "dislikes": dislikes or []},
+        json={"interests": interests, "dislikes": dislikes or [],
+              "resolved_interests": confirmed(*interests) if confirm else []},
         headers={"X-Participant-Token": participant["participant_token"]},
     )
 
@@ -219,16 +227,20 @@ def test_malformed_direct_recommendation_requests_are_rejected(client):
 
 
 class FailingQloo:
-    def __init__(self, code: str, fail_terms: set[str] | None = None):
+    """Search is never expected to be called by a run; Insights fails as configured."""
+
+    def __init__(self, code: str, fail_ids: set[str] | None = None):
         self.code = code
-        self.fail_terms = fail_terms
+        self.fail_ids = fail_ids      # None = every Insights call fails
+        self.searched: list[str] = []
 
     async def search_entities(self, query: str, take: int = 5) -> list[dict]:
-        if self.fail_terms is None or query in self.fail_terms:
-            raise QlooProviderError(self.code, "simulated failure", retryable=True)
+        self.searched.append(query)
         return [{"entity_id": f"demo:interest:{query}", "name": query, "entity_type": "demo"}]
 
     async def get_place_recommendations(self, entity_ids, location, take=10):
+        if self.fail_ids is None or self.fail_ids & set(entity_ids):
+            raise QlooProviderError(self.code, "simulated failure", retryable=True)
         return [
             Candidate(entity_id=f"demo:place:{i}", name=f"Demo Venue {i}", source="mock", verification_status="demo")
             for i in range(4)
@@ -258,14 +270,15 @@ def test_total_lookup_outage_returns_503(client):
         assert db.get(PlanModel, plan["plan_id"]).status == "created"
 
 
-def test_partial_lookup_failure_degrades_with_warning(client):
+def test_partial_retrieval_failure_degrades_with_warning(client):
     plan, _, _ = ready_plan(client)
-    install_runtime(FailingQloo("QLOO_TIMEOUT", fail_terms={"anime"}))
+    qloo = FailingQloo("QLOO_TIMEOUT", fail_ids={"demo:interest:illustration"})
+    install_runtime(qloo)
     response = client.post(
         f"/api/plans/{plan['plan_id']}/recommendations", headers={"X-Share-Token": plan["share_token"]}
     )
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["options"]
-    assert "Asha: anime" in body["unresolved_interests"]
-    assert any("provider failed" in w for w in body["warnings"])
+    assert any("QLOO_TIMEOUT" in w for w in body["warnings"])
+    assert qloo.searched == []        # a run never searches: only confirmed interests are used

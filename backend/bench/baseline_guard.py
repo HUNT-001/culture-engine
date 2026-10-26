@@ -50,13 +50,17 @@ def production_features() -> dict:
         except ImportError:
             return False
 
-    checks["user_confirmed_resolution.exact_match"] = has("app.services.resolution", "exact_match")
+    # Resolution safety fix: the server must have NO name-based auto-acceptance helper.
+    checks["resolution_safety.no_exact_match_auto_accept"] = not has(
+        "app.services.resolution", "exact_match")
     checks["user_confirmed_resolution.confirmed_index"] = has("app.services.resolution",
                                                               "confirmed_index")
     checks["evidence_mapping.matched_interest_names"] = has("app.services.evidence",
                                                             "matched_interest_names")
     checks["ranking.apply_hard_constraints"] = has("app.services.ranking", "apply_hard_constraints")
-    from app.domain.schemas import Candidate, ParticipantInput
+    from app.domain.schemas import Candidate, ParticipantInput, RecommendationResponse
+    checks["schema.RecommendationResponse.needs_confirmation"] = (
+        "needs_confirmation" in RecommendationResponse.model_fields)
     checks["schema.Candidate.participant_affinities"] = (
         "participant_affinities" in Candidate.model_fields)
     checks["schema.Candidate.matched_interests"] = "matched_interests" in Candidate.model_fields
