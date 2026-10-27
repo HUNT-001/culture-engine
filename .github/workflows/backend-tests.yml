@@ -10,6 +10,10 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The benchmark's baseline guard checks git ancestry of the reviewed checkpoint,
+          # so it needs full history (the default shallow clone has no ancestors).
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
