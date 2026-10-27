@@ -3,6 +3,7 @@ from uuid import uuid4
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
+from app.domain.currency import DEFAULT_CURRENCY
 
 
 def utc_now() -> datetime:
@@ -16,6 +17,10 @@ class PlanModel(Base):
     # SHA-256 of the share token; the raw token is returned once at creation and never stored.
     share_token_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     budget_per_person: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # ISO 4217 code for budget_per_person. Plans that predate this column read as INR.
+    budget_currency: Mapped[str] = mapped_column(
+        String(3), default=DEFAULT_CURRENCY, server_default=DEFAULT_CURRENCY, nullable=False
+    )
     status: Mapped[str] = mapped_column(String(24), default="created", nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)

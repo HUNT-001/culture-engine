@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import entities, health, plans, recommendations
 from app.core.config import get_settings
 from app.db.base import Base
+from app.db.schema import ensure_schema
 from app.db.session import engine
 from app.db import models  # Ensure models are registered before create_all.
 
@@ -14,6 +15,7 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     # Convenience for the starter. Use Alembic migrations for deployed schema changes.
     Base.metadata.create_all(bind=engine)
+    ensure_schema(engine)  # additive column upgrades for databases from earlier releases
     yield
     from app.services.runtime import get_runtime
     runtime = get_runtime()

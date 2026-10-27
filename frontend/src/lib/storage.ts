@@ -17,6 +17,8 @@ export type SavedPlan = {
   savedAt: string
   location: string
   budget: string
+  /** ISO 4217 code. Absent in plans saved before currencies existed (read as INR). */
+  currency?: string
   participants: SavedParticipant[]
   result: RecommendationResponse | null
 }
@@ -56,6 +58,7 @@ export function loadPlan(): SavedPlan | null {
       typeof candidate.planRef !== 'string' ||
       typeof candidate.location !== 'string' ||
       typeof candidate.budget !== 'string' ||
+      (candidate.currency !== undefined && typeof candidate.currency !== 'string') ||
       !Array.isArray(candidate.participants) ||
       !candidate.participants.every(isSavedParticipant)
     ) {

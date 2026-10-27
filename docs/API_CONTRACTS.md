@@ -13,6 +13,7 @@ Request shape:
 {
   "location": "Chennai, Tamil Nadu, India",
   "budget_per_person": 800,
+  "budget_currency": "INR",
   "participants": [
     {"participant_id":"p1","display_name":"A","interests":["Radiohead","anime"],
      "resolved_interests":[{"text":"Radiohead","entity_id":"<id from /api/entities/search>","name":"Radiohead","entity_type":"urn:entity:artist"},
@@ -32,13 +33,15 @@ Tokens are random 256-bit values returned **once**; only SHA-256 hashes are stor
 
 | Method & path | Auth header | Body | Success |
 |---|---|---|---|
-| `POST /api/plans` | — | `{location, budget_per_person?}` | `201 {plan_id, share_token, expires_at}` |
+| `POST /api/plans` | — | `{location, budget_per_person?, budget_currency?}` | `201 {plan_id, share_token, expires_at}` |
 | `POST /api/plans/{plan_id}/participants` | `X-Share-Token` | `{display_name}` | `201 {participant_id, participant_token}`; `409` when the plan has `MAX_PARTICIPANTS` (4) |
 | `PUT /api/plans/{plan_id}/participants/{participant_id}/preferences` | `X-Participant-Token` | `{interests: 1–3, resolved_interests: 0–3 (confirmed entities, matched to interests by text), dislikes: 0–5}` (terms ≤100 chars, replaces previous) | `200` participant view |
-| `GET /api/plans/{plan_id}` | `X-Share-Token` | — | `200` plan, participants with interests/dislikes, latest recommendation run (no tokens) |
+| `GET /api/plans/{plan_id}` | `X-Share-Token` | — | `200` plan (incl. `budget_per_person`, `budget_currency`), participants with interests/dislikes, latest recommendation run (no tokens) |
 | `POST /api/plans/{plan_id}/recommendations` | `X-Share-Token` | — | `200` `RecommendationResponse`, persisted as the latest run; `409` if fewer than two participants have interests |
 
 Participants without interests are left out of a run with a warning. Dislikes are enforced as hard exclusions only for exact (case-insensitive) venue-name matches; a budget is recorded but cannot be checked against prices with the current data, and the response says so.
+
+**Budget currency.** `budget_per_person` is a plain number (`> 0`, `≤ 100000`) and `budget_currency` is its ISO 4217 code, sent and stored separately (`50` + `USD`, never `"$50"`). Supported codes are listed in `backend/app/domain/currency.py` (INR, USD, GBP, EUR, CAD, AUD, NZD, JPY, CNY, SGD, HKD, AED, CHF, KRW, MXN, BRL, ZAR); codes are upper-cased and anything else is a `422`. The field is optional on every request and **defaults to `INR`**, so existing clients are unaffected, and a plan stored without a currency is returned as `INR`. A budget is only recorded: there is no currency conversion, the amount is never compared across currencies, and it does not influence ranking. The frontend suggests a currency from the destination (`frontend/src/lib/destination.ts`) and lets the user override it; the backend does not infer one.
 
 ## Error policy
 

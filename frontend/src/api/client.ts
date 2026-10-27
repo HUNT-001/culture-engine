@@ -89,7 +89,9 @@ export async function searchEntities(query: string, take = 5): Promise<EntitySea
 
 // --- Group plan lifecycle ---
 
-export function createPlan(input: { location: string; budget_per_person?: number }): Promise<PlanCreatedResponse> {
+export function createPlan(
+  input: { location: string; budget_per_person?: number; budget_currency?: string },
+): Promise<PlanCreatedResponse> {
   return request<PlanCreatedResponse>('/plans', { method: 'POST', body: input })
 }
 

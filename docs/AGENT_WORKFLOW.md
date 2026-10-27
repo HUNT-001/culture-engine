@@ -37,7 +37,7 @@ The LLM is optional and may compose explanations only from normalized candidate 
 ## Known limitations
 
 - Entity resolution binds only interests the user explicitly confirmed (via the entity picker). Unconfirmed interests are never searched, matched by name or taken from a first result; they are excluded and reported in `unresolved_interests` / `needs_confirmation`.
-- Group plans (create, join, preferences, run) are fully wired and persisted; the stateless `/api/recommendations` route backs the same-device Quick Planner. The schema is created at startup (no migrations).
+- Group plans (create, join, preferences, run) are fully wired and persisted; the stateless `/api/recommendations` route backs the same-device Quick Planner. The schema is created at startup; there is no migration tool, so additive column upgrades for existing databases live in `app/db/schema.py` (idempotent, run at startup, never drop or recreate data).
 - Budget is recorded but cannot be enforced (no price data); dislikes are enforced only for exact venue-name matches.
 - Only the first Qloo explanation per venue is kept when several participants' results contain it, so some linked interests are not displayed.
 - The initial LLM integration is explanation-only, not an unconstrained chat/agent loop.
