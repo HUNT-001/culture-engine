@@ -1,39 +1,236 @@
+<div align="center">
+
+<img src="docs/assets/logo.svg" alt="Common Thread logo: three threads converging into one" width="88" height="88" />
+
 # Common Thread
 
-**Different tastes. One great plan.** Common Thread helps a small group (2–4 people) find places and experiences that fit everyone's *cultural* tastes, using [Qloo](https://docs.qloo.com/)'s cultural-affinity data. Each person says what they love (a band, a film, a cuisine…); the app finds venues in a chosen city that connect those tastes, and shows why.
+**Where different tastes meet.**
 
-Built for the Qloo hackathon. It runs end to end without any credentials in **demo mode** (synthetic data, clearly labelled) and against the live Qloo API in **live mode**.
+A Qloo-powered cultural-discovery app that turns a group's different tastes into places everyone can enjoy.
 
-## What it does
+[![Backend tests](https://github.com/HUNT-001/culture-engine/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/HUNT-001/culture-engine/actions/workflows/backend-tests.yml)
+[![Frontend build](https://github.com/HUNT-001/culture-engine/actions/workflows/frontend-build.yml/badge.svg)](https://github.com/HUNT-001/culture-engine/actions/workflows/frontend-build.yml)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Node 20+](https://img.shields.io/badge/node-20%2B-339933?logo=node.js&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)
+![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-- **Collaborative group plans (multi-device).** One person creates a plan and shares a Plan ID plus a private share code. Others join from their own devices, add their own interests, and anyone with the share code can generate the group recommendation. Plans are anonymous (no accounts) and expire after 24 hours.
-- **Quick Planner (same device).** A fallback that needs no shared plan and no database: enter everyone's interests on one screen and get a result immediately.
-- **You confirm what each interest means.** Typing "Phoenix" could mean a city, a band or an actor. For every interest you search Qloo and pick the exact entity you mean. **Nothing is matched automatically** — no first-result and no exact-name guessing. An interest you have not confirmed is left out of the run, and the result says so (`status` is then `partial` or `failed`, never `complete`).
-- **Affinity-aware group ranking.** Qloo returns venues for each person and for the whole group. A deterministic Python ranker (not an LLM) scores each venue per person from its result rank and Qloo's affinity score (normalised per person), then blends the group average, the least-served member's score and its rank in the combined-group query. Group coverage (how many people's own results include the venue) decides the labels: it offers up to three options — *Shared Ground*, *Cultural Bridge* and *Stretch Choice* — and falls back to a plainly-labelled *Alternative* when the evidence does not support the stronger label.
-- **Traceable evidence.** Each recommendation shows the Qloo affinity signal and which of the group's interests Qloo linked it to (`matched_interests`, mapped only from Qloo's own explainability data), next to our own "group-fit" score and coverage, which are labelled as a heuristic and not a probability of enjoyment.
-- **Honest live/mock labelling.** A pill in the header and a badge on every result say "Live Qloo" or "Demo / mock". Mock venues are fictional and labelled DEMO; live venues are labelled "not verified" because opening hours and availability are never claimed. Each result links to a Maps search.
-- **Optional LLM wording.** An OpenAI-compatible endpoint can phrase the explanations. It cannot add venues or change the ranking. Without one, explanations are deterministic.
+<img src="docs/assets/common-thread-demo.gif" alt="Screen recording of Common Thread: the hero, choosing the Quick Planner, searching and explicitly confirming each interest, then the three recommended options" width="860" />
+
+<sub>The real app running in demo mode: pick a planner, search each interest, explicitly confirm the entity you mean, then see where the group's tastes meet.</sub>
+
+[Features](#features) · [How it works](#how-it-works) · [Components](#major-components) · [Run it](#run-it-locally) · [Configuration](#configuration) · [Deploy](#deployment) · [For developers](#for-developers)
+
+</div>
+
+---
+
+## Features
+
+- **Shared plans across devices.** One person creates a plan and shares a Plan ID plus a private share code. Friends join from their own devices, add what they love, and anyone with the share code can generate the group result. Plans are anonymous (no accounts) and expire after 24 hours.
+- **Quick Planner.** Everyone on one screen, no shared plan and no database needed. Enter each person's interests and get a result immediately.
+- **You confirm what each interest means.** "Phoenix" could be a city, a band or an actor. For every interest you search Qloo and pick the exact entity you mean. Nothing is matched automatically, and the original wording and the confirmed entity are kept exactly as chosen.
+- **Group-aware ranking.** Qloo is asked about each person and about the whole group. A deterministic Python ranker, not an LLM, blends each person's result rank with Qloo's per-person affinity and offers up to three options: **Shared Ground** (everyone overlaps), **Cultural Bridge** (several connect) and **Stretch Choice** (a worthwhile wildcard).
+- **Traceable evidence.** Each pick shows coverage, Qloo's affinity signal and group-fit as three separate numbers, plus the interests Qloo linked it to, only when Qloo supplied that data.
+- **Honest live/demo labelling.** A pill in the header and a badge on every result say **Live Qloo** or **Demo**. Demo venues are fictional and labelled; live venues are labelled "not verified". Each result links to a Maps search.
+- **Optional LLM wording.** An OpenAI-compatible endpoint can phrase the explanations. It cannot add venues or change the ranking; without one, explanations are deterministic.
+- **Thoughtful UI.** Responsive down to 360px, keyboard-accessible with visible focus, skip link and labelled controls, and `prefers-reduced-motion` support.
+
+> Results are discovery signals, not guarantees. Venue hours, prices and availability are never claimed; check before you travel.
+
+---
 
 ## How it works
 
-```
-React + Vite + TypeScript  ──HTTP──▶  FastAPI  ──▶  LangGraph workflow (one bounded graph)
-                                        │            validate_request → resolve_entities → retrieve_insights
-                                        │            → normalize_candidates → rank_options → validate_evidence
-                                        │            → compose_response → validate_output
-                                        ├──▶ Qloo adapter (QlooClient)      — only place that talks to Qloo
-                                        └──▶ SQLAlchemy (SQLite locally, PostgreSQL in production) — plans only
+### Full-stack architecture
+
+```mermaid
+flowchart TB
+  subgraph Client["Browser: React + Vite + TypeScript"]
+    direction LR
+    PL["Planners<br/>Quick (same device)<br/>Collaborative (shared plan)"]
+    IP["InterestPicker<br/>search, explicit confirm"]
+    RP["ResultsPanel<br/>coverage, affinity, evidence"]
+    STORE[("Browser storage<br/>sessionStorage: plan credentials<br/>localStorage: last quick plan")]
+    PL --> IP
+    PL --> RP
+    PL -.-> STORE
+  end
+
+  subgraph Server["Backend: FastAPI on Python 3.11+"]
+    direction LR
+    ROUTES["Routers<br/>/health, /entities/search<br/>/recommendations, /plans/*"]
+    FLOW["LangGraph workflow<br/>8 bounded nodes"]
+    SERV["Services<br/>resolution, ranking,<br/>evidence, provenance"]
+    PROV["Providers<br/>Qloo adapter or demo mock,<br/>response composer"]
+    REPO["Repository<br/>SQLAlchemy"]
+    ROUTES --> FLOW
+    FLOW --> SERV
+    FLOW --> PROV
+    ROUTES --> REPO
+  end
+
+  DB[("Database<br/>SQLite (dev) or PostgreSQL (prod)<br/>plans, participants, preferences, runs")]
+  QLOO(["Qloo API<br/>/search and /v2/insights"])
+  LLM(["Optional LLM<br/>OpenAI-compatible, wording only"])
+
+  Client -- "HTTPS JSON, tokens in headers" --> Server
+  REPO --> DB
+  PROV -- "API key, server-side only" --> QLOO
+  PROV -.-> LLM
 ```
 
-`resolve_entities` binds only interests you confirmed. `retrieve_insights` then asks Qloo for venues per person plus one combined query, capped at `QLOO_MAX_INSIGHTS_CALLS` (default 5) Qloo Insights calls per run. A run never calls Qloo's search; search is used only by the interest picker (`GET /api/entities/search`). Qloo and LLM keys live only in the backend and are never sent to the browser.
+The browser never holds a Qloo or LLM key and never calls a provider directly. The same-device Quick Planner uses the stateless `/api/recommendations` route and never touches the database.
 
-More detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md), [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md).
+### The agent workflow
+
+One bounded [LangGraph](https://langchain-ai.github.io/langgraph/) graph, with no open-ended tool loop and no agent swarm. Each node has a single job, and the LLM, if configured, only touches wording.
+
+```mermaid
+flowchart TD
+  START([Request: location, people, confirmed interests]) --> V["validate_request<br/>schema and size bounds"]
+  V --> E["resolve_entities<br/>binds only entities the user confirmed"]
+  E -. "unconfirmed interests" .-> NC[/"excluded and reported<br/>needs_confirmation"/]
+  E --> I["retrieve_insights<br/>one query per person plus one combined<br/>capped by QLOO_MAX_INSIGHTS_CALLS"]
+  I -. "provider error" .-> PART[/"warning, partial results kept"/]
+  I --> N["normalize_candidates<br/>merge, apply dislikes, rank<br/>link Qloo signals to interests"]
+  N --> O["rank_options<br/>Shared Ground, Cultural Bridge,<br/>Stretch Choice, or Alternative"]
+  O --> VE["validate_evidence<br/>live or demo labels, coverage notes"]
+  VE --> C["compose_response<br/>deterministic text, optional LLM wording"]
+  C --> VO["validate_output<br/>schema check before returning"]
+  VO --> END([Response: options, warnings, status])
+```
+
+### How a recommendation is scored
+
+```mermaid
+flowchart LR
+  subgraph Person["For each person"]
+    R["Result rank<br/>in their own Qloo results"]
+    A["Qloo affinity<br/>normalised per person"]
+    R --> PS["Person score<br/>50% rank + 50% affinity<br/>(rank alone if no affinity)"]
+    A --> PS
+  end
+  PS --> AVG["Group average"]
+  PS --> MIN["Least-served person"]
+  CMB["Rank in the combined-group query"]
+  AVG --> FIT["Group-fit<br/>60% average + 20% minimum<br/>+ 20% combined rank"]
+  MIN --> FIT
+  CMB --> FIT
+  COV["Coverage: how many people's own results include the venue"]
+  FIT --> OUT["Ordered candidates"]
+  COV --> LABEL["Option label<br/>Shared Ground, Cultural Bridge, Stretch Choice"]
+  OUT --> LABEL
+```
+
+Qloo's affinity and linked interests are Qloo's signals; coverage and group-fit are Common Thread's own calculation, and the UI keeps them visibly separate.
+
+### A shared plan, end to end
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Host
+  actor Friend
+  participant UI as React app
+  participant API as FastAPI
+  participant DB as Database
+  participant Q as Qloo
+
+  Host->>UI: Create plan (city, optional budget)
+  UI->>API: POST /api/plans
+  API->>DB: store plan and a SHA-256 hash of the share token
+  API-->>UI: plan_id and share_token (returned once)
+  Host-->>Friend: Plan ID and share code, over a private channel
+  Friend->>UI: Join with Plan ID and share code
+  UI->>API: POST /api/plans/{id}/participants (X-Share-Token)
+  API-->>UI: participant_id and participant_token
+  loop each person
+    UI->>API: GET /api/entities/search?query=...
+    API->>Q: /search
+    Q-->>API: candidate entities
+    API-->>UI: name, type and disambiguation
+    Note over UI: the person explicitly confirms one entity
+    UI->>API: PUT .../preferences (X-Participant-Token)
+    API->>DB: save interests and confirmed entity ids
+  end
+  Host->>UI: Generate recommendations
+  UI->>API: POST /api/plans/{id}/recommendations (X-Share-Token)
+  API->>Q: /v2/insights per person plus combined
+  API->>DB: save the run
+  API-->>UI: options, warnings, needs_confirmation, status
+```
+
+Tokens travel only in headers, never in URLs; the server stores only their hashes.
+
+---
+
+## Major components
+
+```mermaid
+flowchart LR
+  subgraph FE["frontend/"]
+    direction TB
+    FE1["components/<br/>Quick, Collaborative, InterestPicker,<br/>ResultsPanel, Stepper, ThreadArt"]
+    FE2["lib/<br/>interests, results, plan, invite,<br/>session, storage, present"]
+    FE3["api/client.ts, types.ts"]
+    FE1 --> FE2
+    FE2 --> FE3
+  end
+  subgraph BE["backend/app/"]
+    direction TB
+    BE1["api/routes/<br/>health, entities, recommendations, plans"]
+    BE2["workflows/<br/>graph, nodes, state"]
+    BE3["services/<br/>resolution, ranking, evidence,<br/>provenance, runtime"]
+    BE4["providers/<br/>qloo, mock_qloo, composer, interfaces"]
+    BE5["db/ and core/<br/>models, repository, session,<br/>config, security"]
+    BE1 --> BE2
+    BE2 --> BE3
+    BE2 --> BE4
+    BE1 --> BE5
+  end
+  subgraph QA["Quality and delivery"]
+    direction TB
+    QA1["backend/tests/<br/>unit, API, lifecycle"]
+    QA2["backend/bench/<br/>CommonThreadBench"]
+    QA3[".github/workflows/ and render.yaml<br/>CI and backend deploy"]
+  end
+  FE -- "HTTP /api" --> BE
+  QA -. "verifies and ships" .-> BE
+```
+
+| Area | Where | What it does |
+|---|---|---|
+| **App shell** | `frontend/src/App.tsx` | Hero, live/demo pill (from `/api/health`), switch between Collaborative and Quick planning. |
+| **Planners** | `components/CollaborativePlanner.tsx`, `QuickPlanner.tsx` | The two flows. They share one confirmation gate, so an interest can't be submitted until it is confirmed or removed. |
+| **Interest picker** | `components/InterestPicker.tsx` | Search Qloo, inspect candidates (name, type, disambiguation), explicitly confirm one. |
+| **Results** | `components/ResultsPanel.tsx` | Result cards with the three separate metrics, evidence and status banners. |
+| **Frontend logic** | `frontend/src/lib/` | Pure, unit-tested helpers: interest rows and validation, result presentation, sessions, invites. |
+| **API routes** | `backend/app/api/routes/` | `health`, `entities` (candidate search), `recommendations` (stateless), `plans` (lifecycle). |
+| **Workflow** | `backend/app/workflows/` | The LangGraph graph, its node functions and typed state. |
+| **Services** | `backend/app/services/` | Entity-resolution policy, ranking, evidence mapping, provenance labels and the runtime wiring (mock vs live). |
+| **Providers** | `backend/app/providers/` | Qloo adapter (`httpx`), demo mock, response composer (deterministic or LLM), and the provider interfaces. |
+| **Persistence** | `backend/app/db/` | SQLAlchemy models (`plans`, `participants`, `preferences`, `recommendation_runs`), repository and sessions. |
+| **Config & security** | `backend/app/core/` | Environment-driven settings and token hashing. |
+| **CommonThreadBench** | `backend/bench/` | An offline evaluation harness that drives the real code against Qloo-shaped mock responses. |
+
+| Layer | Stack |
+|---|---|
+| Frontend | React, Vite, TypeScript, lucide-react icons, Vitest |
+| Backend | FastAPI, Pydantic v2, LangGraph, SQLAlchemy 2, httpx |
+| Data | SQLite (local), PostgreSQL via psycopg 3 (production) |
+| Cultural data | [Qloo](https://docs.qloo.com/) hackathon API (`/search`, `/v2/insights`) |
+| Tooling | pytest, Ruff, GitHub Actions, Render |
+
+---
 
 ## Run it locally
 
-Prerequisites: Python 3.11+, Node.js 20+ (CI uses Node 22), Git.
+**Prerequisites:** Python 3.11+, Node.js 20+ (CI uses 22), Git. No API keys are needed: the app starts in **demo mode** with synthetic data.
 
-**Backend (demo mode, no credentials):**
+**1. Backend**
 
 ```bash
 cd backend
@@ -44,9 +241,9 @@ cp .env.example .env             # Windows PowerShell: Copy-Item .env.example .e
 uvicorn app.main:app --reload --port 8000
 ```
 
-`.env.example` defaults to `MOCK_PROVIDERS=true` and a local SQLite file. API docs: <http://localhost:8000/docs>.
+The API is now on <http://localhost:8000> (interactive docs at `/docs`, health at `/api/health`). `.env.example` defaults to `MOCK_PROVIDERS=true` and a local SQLite file.
 
-**Frontend** (second terminal):
+**2. Frontend** (second terminal)
 
 ```bash
 cd frontend
@@ -55,85 +252,173 @@ cp .env.example .env.local       # Windows PowerShell: Copy-Item .env.example .e
 npm run dev
 ```
 
-Open the URL Vite prints (usually <http://localhost:5173>, which is the default allowed CORS origin).
+Open <http://localhost:5173> (the default allowed CORS origin).
+
+**A 60-second tour:** choose **Try the Quick Planner**, press **Search** on an interest, then **Confirm** the entity you mean. Confirm the rest, press **Find our shared next thing**, and read the three options. To try the multi-device flow, open the app in a second browser profile, create a plan in one, and join from the other with the Plan ID and share code.
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+| Symptom | Likely cause and fix |
+|---|---|
+| Header pill says **Backend offline** | The API isn't running, or `VITE_API_BASE_URL` points elsewhere. It must end in `/api` (default `http://localhost:8000/api`). |
+| Browser console shows a CORS error | Add your frontend origin to `CORS_ORIGINS` (exact origin, no trailing slash). |
+| `QLOO_API_KEY is required` on start in live mode | `MOCK_PROVIDERS=false` needs a key. Set it, or switch back to `true`. |
+| `psycopg2` import error with PostgreSQL | Use the psycopg 3 URL form `postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME`. |
+| A few benchmark tests fail with "checkpoint commit is not present" | Run from a full clone (`git fetch --unshallow`); the benchmark's baseline guard inspects git history. |
+
+</details>
+
+---
 
 ## Configuration
 
-Backend environment variables (names are those read in `backend/app/core/config.py`; see `backend/.env.example`):
+Backend environment variables (read in `backend/app/core/config.py`; template in `backend/.env.example`):
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `MOCK_PROVIDERS` | `true` | `true` = synthetic demo data. `false` = live Qloo (requires `QLOO_API_KEY`; the app refuses to start its runtime without it). |
-| `QLOO_API_KEY` | empty | Qloo hackathon API key. **Backend only; store as a host secret.** |
+| `MOCK_PROVIDERS` | `true` | `true` = synthetic demo data. `false` = live Qloo (requires `QLOO_API_KEY`). |
+| `QLOO_API_KEY` | empty | Qloo hackathon API key. **Backend only; store it as a host secret.** |
 | `QLOO_BASE_URL`, `QLOO_SEARCH_PATH`, `QLOO_INSIGHTS_PATH` | `https://hackathon.api.qloo.com`, `/search`, `/v2/insights` | Qloo endpoints. |
-| `QLOO_TIMEOUT_SECONDS`, `QLOO_MAX_INSIGHTS_CALLS` | `15`, `5` | Per-request timeout; Insights calls per run. |
-| `DATABASE_URL` | `sqlite:///./common_thread.db` | Use PostgreSQL in production: `postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME` (psycopg 3). |
-| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated exact frontend origins, no trailing slash or path. |
+| `QLOO_TIMEOUT_SECONDS`, `QLOO_MAX_INSIGHTS_CALLS` | `15`, `5` | Request timeout; Insights calls per run. |
+| `DATABASE_URL` | `sqlite:///./common_thread.db` | PostgreSQL in production: `postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME`. |
+| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated exact frontend origins. |
 | `APP_ENV` | `development` | Reported by `/api/health`. |
 | `PLAN_TTL_HOURS`, `MAX_PARTICIPANTS` | `24`, `4` | Plan lifetime and size. |
-| `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS` | empty / `15` | Optional OpenAI-compatible chat-completions explainer. All three of URL, key and model must be set to enable it. |
+| `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS` | empty / `15` | Optional OpenAI-compatible explainer. URL, key and model must all be set to enable it. |
 
-Frontend: `VITE_API_BASE_URL` is the backend URL **including `/api`** (default `http://localhost:8000/api`). It is baked in at build time. Only public values belong in `VITE_*` variables — never a Qloo or LLM key.
+Frontend: `VITE_API_BASE_URL` is the backend URL **including `/api`** (default `http://localhost:8000/api`). It is baked in at build time, and only public values belong in `VITE_*` variables, never a Qloo or LLM key.
 
-## Live mode
+### Live Qloo mode
 
-1. Set `QLOO_API_KEY` and `MOCK_PROVIDERS=false` in the backend environment (a host secret, or `backend/.env` locally; never commit `.env`).
-2. Restart the backend and open `GET /api/health`: it must report `"demo_mode": false`. The app header then shows **Live Qloo**.
-3. In the app, search for an interest and confirm an entity, then generate a group result. Each run uses one search per interest in the picker and up to 5 Insights calls, so watch your hackathon quota.
+1. Set `QLOO_API_KEY` and `MOCK_PROVIDERS=false` in the backend environment (never commit `.env`).
+2. Restart the backend and check `GET /api/health` returns `"demo_mode": false`. The header pill then reads **Live Qloo**.
+3. Search for an interest, confirm an entity, and generate a result. Each run uses up to 5 Insights calls, plus one search per interest in the picker, so watch your quota.
 
-The adapter's request parameters and response parsing are isolated in `backend/app/providers/qloo.py`. An opt-in contract check, `backend/tests/test_qloo_live.py`, runs only when `QLOO_API_KEY` is exported in your shell (at most two requests). Do not commit real Qloo responses; the hackathon terms restrict redistributing them.
+Request parameters and response parsing live in `backend/app/providers/qloo.py`. An opt-in contract check, `backend/tests/test_qloo_live.py`, runs only when `QLOO_API_KEY` is exported in your shell (at most two requests). Don't commit real Qloo responses: the hackathon terms restrict redistributing them.
 
-## Deployment
+---
 
-The backend and the frontend are deployed **separately**. `render.yaml` defines **only the backend** web service; the frontend is a static site on a separate host.
+## API at a glance
 
-1. **PostgreSQL (required for real use).** Create a persistent PostgreSQL database. A free host's local disk is ephemeral, so the SQLite default would lose every plan on redeploy. Convert the provider's connection string to the psycopg 3 form `postgresql+psycopg://…` and keep it secret. Tables are created automatically on startup (there are no migrations yet), so use a fresh database; a database created by an older version may lack newer columns.
-2. **Backend (Render).** Create a Blueprint from `render.yaml` (root `backend`, build `pip install -e ".[dev]"`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, health check `/api/health`). The file declares four dashboard-managed values (`sync: false`, so Render asks you for them and they are never stored in git):
-   - `DATABASE_URL` — the PostgreSQL URL above.
-   - `CORS_ORIGINS` — the exact frontend origin, e.g. `https://your-frontend.example.com`.
-   - `MOCK_PROVIDERS` — `true` for a safe demo, `false` for live. If left unset the app defaults to mock.
-   - `QLOO_API_KEY` — your Qloo key (only needed when `MOCK_PROVIDERS=false`).
-3. **Frontend (static site, e.g. Cloudflare Pages or Render Static Site).** Root `frontend`, build `npm ci && npm run build`, publish directory `dist`, environment variable `VITE_API_BASE_URL=https://<backend-host>/api`. Rebuild whenever that value changes. The app has no client-side routes, so no rewrite rules are needed.
-4. **Verify.** `GET https://<backend-host>/api/health` returns `status: ok` and the expected `demo_mode`. Create a plan on one device, join it from another, and run a recommendation. Check the cold start of a free-tier backend before a demo, since the first request after idle can be slow.
+| Method and path | Auth header | Purpose |
+|---|---|---|
+| `GET /api/health` | none | Status and `demo_mode`. |
+| `GET /api/entities/search?query=&take=` | none | Candidate Qloo entities for the picker. |
+| `POST /api/recommendations` | none | Stateless group result (Quick Planner). |
+| `POST /api/plans` | none | Create a plan; returns `plan_id` and a one-time `share_token`. |
+| `GET /api/plans/{id}` | `X-Share-Token` | Plan, roster and latest result. |
+| `POST /api/plans/{id}/participants` | `X-Share-Token` | Join; returns a `participant_token`. |
+| `PUT /api/plans/{id}/participants/{pid}/preferences` | `X-Participant-Token` | Save interests with confirmed entities. |
+| `POST /api/plans/{id}/recommendations` | `X-Share-Token` | Generate and store the group result. |
 
-The deployed backend authenticates to Qloo with its own `QLOO_API_KEY`; nothing depends on any development-session proxy.
+Request and response shapes, status codes and the confirmation rule are in [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md).
 
-## Tests
+---
+
+## Testing
 
 ```bash
 # Backend (from backend/)
-pytest                                    # unit, API, lifecycle and the offline benchmark suite
-ruff check .                              # note: the repository has inherited lint findings
+pytest                          # unit, API, lifecycle and the offline benchmark suite
+ruff check .
 
 # Frontend (from frontend/)
-npm test                                  # vitest
-npm run build                             # type-check + production build
+npm test                        # Vitest
+npm run build                   # type-check + production build
 
 # Offline benchmark report (from backend/)
-python -m bench.run_benchmark             # regenerates docs/COMMON_THREAD_BENCHMARK_RESULTS.md
+python -m bench.run_benchmark   # regenerates docs/COMMON_THREAD_BENCHMARK_RESULTS.md
 ```
 
-The backend tests use synthetic fixtures and never contact Qloo; the benchmark blocks outbound sockets. The benchmark's baseline guard inspects git history, so run the tests from a full clone (CI uses `fetch-depth: 0`).
+Tests use synthetic fixtures and never contact Qloo; the benchmark blocks outbound sockets. GitHub Actions runs the backend tests and the frontend build on every push (the backend job checks out full history, which the benchmark's baseline guard needs).
 
-## Evidence and evaluation
+---
 
-CommonThreadBench (`backend/bench/`, [`docs/COMMON_THREAD_BENCHMARK.md`](docs/COMMON_THREAD_BENCHMARK.md)) is an **offline, synthetic** evaluation that drives the real adapter, workflow and routes against Qloo-shaped mock responses. Its numbers describe our code's behaviour on invented data, **not** the accuracy of Qloo or of real-world recommendations. In particular, "0 false automatic confirmations" is a consequence of the confirm-every-interest policy, not a measure of entity-resolution accuracy. A small, bounded live observation of Qloo's entity search was made during development (qualitative only, no accuracy figures), and the human evaluation of recommendation quality is **pending**. The earlier v1 benchmark figures were withdrawn and are kept only as history in [`docs/benchmark-history/`](docs/benchmark-history/).
+## Deployment
 
-## Known limitations
+The backend and frontend deploy **separately**. `render.yaml` defines only the backend; the frontend is a static site.
 
-- **Budget is recorded but not enforced.** Qloo's place data used here carries no prices, so a budget cannot be checked; results say it was not checked.
-- **Evidence shows only the first Qloo explanation per venue.** When several people's queries return the same venue, only the first returned explanation is kept, so some linked interests are not displayed.
-- **Dislikes** exclude only venues whose name matches exactly (case-insensitive); broader dislikes ("loud bars") cannot be checked.
-- **Every interest needs a search and a pick.** An interest with no Qloo candidate cannot be used. In a collaborative plan only each person can confirm their own interests; a run still proceeds without anyone's unconfirmed ones and says so.
-- **Venue facts are not verified** (hours, availability, safety). Treat results as discovery signals and check before travelling.
-- **Plans are anonymous and expire** after `PLAN_TTL_HOURS`; closing the browser tab ends the device's session, so keep the Plan ID and share code to rejoin.
-- No migrations (schema is created at startup), no rate limiting, and free-tier hosting may sleep or have retention limits — review before any public launch.
-- Rankings use provisional coefficients that have not been calibrated against real human preferences.
+1. **PostgreSQL.** Create a persistent database and convert its connection string to the psycopg 3 form `postgresql+psycopg://…`. Tables are created automatically on startup, so use a fresh database.
+2. **Backend (Render).** Create a Blueprint from `render.yaml` (root `backend`, build `pip install -e ".[dev]"`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, health check `/api/health`). Render prompts for the four dashboard-managed values, which are never stored in git:
+   - `DATABASE_URL`: the PostgreSQL URL above.
+   - `CORS_ORIGINS`: the exact frontend origin, e.g. `https://your-frontend.example.com`.
+   - `MOCK_PROVIDERS`: `true` for a safe demo, `false` for live (unset defaults to mock).
+   - `QLOO_API_KEY`: your Qloo key (needed only when `MOCK_PROVIDERS=false`).
+3. **Frontend (static site).** Cloudflare Pages or a Render Static Site: root `frontend`, build `npm ci && npm run build`, publish `dist`, and set `VITE_API_BASE_URL=https://<backend-host>/api`. Rebuild whenever that value changes. The app has no client-side routes, so no rewrite rules are needed.
+4. **Verify.** `GET https://<backend-host>/api/health` returns `status: ok` and the expected `demo_mode`. Create a plan on one device, join from another, and run a recommendation. On a free tier the first request after idle can be slow.
+
+The deployed backend authenticates to Qloo with its own `QLOO_API_KEY`; nothing depends on a development-session proxy.
+
+---
+
+## For developers
+
+### Where to change what
+
+| I want to… | Start here |
+|---|---|
+| Swap or add a data source | Implement the `QlooProvider` protocol in `backend/app/providers/interfaces.py`, then wire it in `services/runtime.py`. |
+| Change how results are ranked | `backend/app/services/ranking.py`. Re-run `pytest` and `python -m bench.run_benchmark`. |
+| Add or reorder a workflow step | `backend/app/workflows/nodes.py`, then register it in `graph.py`. |
+| Add an API field | `backend/app/domain/schemas.py`, then `docs/API_CONTRACTS.md` and `frontend/src/types.ts`. |
+| Add a setting | `backend/app/core/config.py`, `backend/.env.example` and the table above. |
+| Restyle the UI | Design tokens live in `:root` at the top of `frontend/src/style.css`. |
+
+### Design principles
+
+- **Server-side keys.** Qloo and LLM credentials never reach the browser.
+- **Explicit confirmation.** The server binds an interest to a Qloo entity only when the user chose it.
+- **Deterministic ranking.** Ordering and labels come from tested Python, never from an LLM.
+- **Bounded workflow.** One fixed graph with capped provider calls.
+- **Honest labelling.** Demo vs live, and Qloo's signals vs our own calculations, are always distinguishable.
+
+### Developer artifacts
+
+| Artifact | What it is |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System boundary, core modules and trust boundaries. |
+| [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md) | Workflow nodes, state rules and the LLM policy. |
+| [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md) | Endpoint contracts and error policy. |
+| [`docs/COMMON_THREAD_BENCHMARK.md`](docs/COMMON_THREAD_BENCHMARK.md) | CommonThreadBench methodology, metrics and evidence tags. |
+| [`docs/COMMON_THREAD_BENCHMARK_RESULTS.md`](docs/COMMON_THREAD_BENCHMARK_RESULTS.md) | Generated results (`python -m bench.run_benchmark`). |
+| [`docs/COMMON_THREAD_BENCHMARK_FUNCTION_MAP.md`](docs/COMMON_THREAD_BENCHMARK_FUNCTION_MAP.md) | Which production functions each benchmark test exercises. |
+| [`docs/RESEARCH_AND_DESIGN_FINDINGS.md`](docs/RESEARCH_AND_DESIGN_FINDINGS.md) | Research notes behind the design decisions. |
+| [`docs/design-history/`](docs/design-history/) | The original product brief, early architecture sketches and first build plan (historical). |
+| [`docs/assets/`](docs/assets/) | Logo and the demo GIF used above. |
+| [`backend/bench/results/benchmark_results.json`](backend/bench/results/benchmark_results.json) | Machine-readable benchmark output. |
+
+**About the benchmark.** CommonThreadBench is an *offline, synthetic* evaluation: it drives the real adapter, workflow and routes against Qloo-shaped mock responses, so its numbers describe this codebase's behaviour, not Qloo's accuracy or real-world taste. Live observations and human evaluation are kept separate and clearly tagged in the docs.
+
+### Feedback and contributing
+
+Found something confusing, or have an idea? Open an issue with the **Developer feedback** template ([new issue](https://github.com/HUNT-001/culture-engine/issues/new/choose)); it prompts for what you ran, what you expected and what happened. For code changes, branch from `main`, keep `pytest`, `npm test` and `npm run build` green, and use short conventional commit messages (`feat:`, `fix:`, `docs:`, `ci:`).
+
+---
 
 ## Repository map
 
-- `backend/app` — FastAPI app, LangGraph workflow, Qloo adapter, ranking, evidence, plan persistence.
-- `backend/tests` — unit, API and lifecycle tests plus the benchmark tests; `backend/bench` — CommonThreadBench.
-- `frontend/src` — React app (`components/`, pure logic and tests in `lib/`, API client in `api/`).
-- `docs/` — architecture, workflow, API contracts, research notes and benchmark documents.
-- `render.yaml` — backend service blueprint; `.github/workflows` — CI.
+```text
+.
+├── backend/
+│   ├── app/            FastAPI app: api/, core/, db/, domain/, providers/, services/, workflows/
+│   ├── tests/          unit, API, lifecycle and benchmark tests
+│   ├── bench/          CommonThreadBench (offline evaluation harness)
+│   ├── pyproject.toml
+│   └── .env.example
+├── frontend/
+│   ├── src/            App.tsx, components/, lib/, api/, style.css, types.ts
+│   └── .env.example
+├── docs/               architecture, workflow, API contracts, benchmark, design-history/, assets/
+├── .github/            CI workflows and the issue template
+├── render.yaml         backend deployment blueprint
+└── LICENSE             MIT
+```
+
+---
+
+<div align="center">
+
+**Common Thread** · where different tastes meet · built on [Qloo](https://docs.qloo.com/)'s cultural graph
+
+</div>
