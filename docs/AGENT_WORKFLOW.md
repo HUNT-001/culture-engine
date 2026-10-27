@@ -8,7 +8,7 @@ Conditional transitions:
 
 - Invalid/missing required user inputs: return a validation error for the UI; don't call providers.
 - Unresolvable interests: return an explicit unresolved-interest list.
-- Too few candidates: allow at most one recovery attempt in later implementation; the current skeleton returns limited results with warnings.
+- Too few candidates: allow at most one recovery attempt in later implementation; the current implementation returns limited results with warnings.
 - Provider timeout/auth/quota failure: classify the error and return an honest partial/failure response.
 - Invalid output: do not display it; use deterministic explanation fallback.
 
@@ -34,9 +34,11 @@ The LLM is optional and may compose explanations only from normalized candidate 
 - Preferences: 1-3 interests per participant for the initial product.
 
 
-## Known starter limitations
+## Known limitations
 
-- Entity resolution currently selects the first returned search result. Add a user-facing entity confirmation step before public/live use, especially for ambiguous names.
-- Plan/participant tables are scaffolding; the direct recommendation route is the only wired application flow.
+- Entity resolution binds only interests the user explicitly confirmed (via the entity picker). Unconfirmed interests are never searched, matched by name or taken from a first result; they are excluded and reported in `unresolved_interests` / `needs_confirmation`.
+- Group plans (create, join, preferences, run) are fully wired and persisted; the stateless `/api/recommendations` route backs the same-device Quick Planner. The schema is created at startup (no migrations).
+- Budget is recorded but cannot be enforced (no price data); dislikes are enforced only for exact venue-name matches.
+- Only the first Qloo explanation per venue is kept when several participants' results contain it, so some linked interests are not displayed.
 - The initial LLM integration is explanation-only, not an unconstrained chat/agent loop.
-- Real provider parameter names and response schemas need contract testing.
+- The live Qloo adapter should be re-checked with the opt-in `backend/tests/test_qloo_live.py` (needs `QLOO_API_KEY` exported) after any API change.

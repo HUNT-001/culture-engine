@@ -1,9 +1,9 @@
 # Frontend
 
-React + Vite + TypeScript. It calls FastAPI through `VITE_API_BASE_URL`.
+React + Vite + TypeScript. It calls FastAPI through `VITE_API_BASE_URL`, the backend URL **including `/api`** (e.g. `https://<backend-host>/api`); the value is baked in at build time, so rebuild after changing it. For deployment (static site, `npm ci && npm run build`, publish `dist`) see the root `README.md`.
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 npm run build

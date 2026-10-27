@@ -1,11 +1,34 @@
 """Deterministic group ranking; do not move this policy into an LLM prompt."""
-from collections import defaultdict
+import math
 from urllib.parse import quote_plus
+
 from app.domain.schemas import Candidate, RecommendationOption
+
+# How much a candidate's within-profile Qloo affinity refines its rank-position score.
+# Bounded in [0, 1]. Rank position anchors the signal; affinity nuances ordering within
+# a single participant's result set. When affinity is unavailable the weight is ignored
+# and scoring falls back to pure rank position (identical to pre-affinity behaviour).
+AFFINITY_WEIGHT = 0.5
 
 
 def maps_search_url(name: str, location: str) -> str:
     return f"https://www.google.com/maps/search/?api=1&query={quote_plus(name + ' ' + location)}"
+
+
+def _affinity_of(candidate: Candidate) -> float | None:
+    """Return a finite numeric Qloo affinity from a candidate's explanation, else None.
+
+    Guards against missing keys, booleans, strings, and NaN/inf so malformed or absent
+    affinity never crashes ranking and never silently becomes a real score.
+    """
+    expl = candidate.qloo_explanation
+    if isinstance(expl, dict):
+        value = expl.get("affinity")
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, (int, float)) and math.isfinite(value):
+            return float(value)
+    return None
 
 
 def merge_candidate_batches(
@@ -18,9 +41,18 @@ def merge_candidate_batches(
             if current is None:
                 current = candidate.model_copy(deep=True)
                 current.participant_ranks = {}
+                current.participant_affinities = {}
+                current.combined_rank = None
                 current.reasons = []
                 merged[candidate.entity_id] = current
-            current.participant_ranks[participant_id] = rank
+            # A repeated entity in one list keeps its best (lowest) rank.
+            previous = current.participant_ranks.get(participant_id)
+            current.participant_ranks[participant_id] = rank if previous is None else min(previous, rank)
+            # Each participant query is a separate Qloo call, so capture that query's
+            # affinity for this participant rather than collapsing them together.
+            affinity = _affinity_of(candidate)
+            if affinity is not None:
+                current.participant_affinities[participant_id] = affinity
             if current.address is None and candidate.address:
                 current.address = candidate.address
             if current.qloo_explanation is None and candidate.qloo_explanation is not None:
@@ -30,8 +62,10 @@ def merge_candidate_batches(
         if current is None:
             current = candidate.model_copy(deep=True)
             current.participant_ranks = {}
+            current.participant_affinities = {}
+            current.combined_rank = None
             merged[candidate.entity_id] = current
-        current.combined_rank = rank
+        current.combined_rank = rank if current.combined_rank is None else min(current.combined_rank, rank)
         if current.address is None and candidate.address:
             current.address = candidate.address
         if current.qloo_explanation is None and candidate.qloo_explanation is not None:
@@ -39,25 +73,84 @@ def merge_candidate_batches(
     return list(merged.values())
 
 
+def _affinity_bounds(
+    candidates: list[Candidate], participant_ids: list[str]
+) -> dict[str, tuple[float, float]]:
+    """Per-participant min/max affinity, only where there is spread to normalise.
+
+    Affinities are comparable within a single participant's query but not across
+    participants, so each participant gets its own bounds. A participant with fewer than
+    two affinity values, or no spread (all equal / tied), yields no bounds, so affinity
+    is simply unused for that participant and rank position stands alone.
+    """
+    bounds: dict[str, tuple[float, float]] = {}
+    for participant_id in participant_ids:
+        values = [
+            candidate.participant_affinities[participant_id]
+            for candidate in candidates
+            if participant_id in candidate.participant_affinities
+        ]
+        if len(values) >= 2 and max(values) > min(values):
+            bounds[participant_id] = (min(values), max(values))
+    return bounds
+
+
+def apply_hard_constraints(
+    candidates: list[Candidate], dislikes: list[str]
+) -> tuple[list[Candidate], list[str]]:
+    """Exclude candidates whose name exactly matches a stated dislike (case-insensitive).
+
+    Only exact matches are enforced; broader dislikes (e.g. "loud bars") cannot be checked
+    against the available candidate data and must not be presented as enforced.
+    """
+    blocked = {term.casefold().strip() for term in dislikes if term.strip()}
+    if not blocked:
+        return candidates, []
+    kept: list[Candidate] = []
+    excluded: list[str] = []
+    for candidate in candidates:
+        if candidate.name.casefold().strip() in blocked:
+            excluded.append(candidate.entity_id)
+        else:
+            kept.append(candidate)
+    return kept, excluded
+
+
 def rank_candidates(candidates: list[Candidate], participant_ids: list[str], location: str) -> list[Candidate]:
     if not candidates:
         return []
     max_rank = max([len(candidates), 1])
     participant_count = max(len(participant_ids), 1)
+    affinity_bounds = _affinity_bounds(candidates, participant_ids)
+
+    def person_score(participant_id: str, candidate: Candidate) -> float:
+        if participant_id not in candidate.participant_ranks:
+            return 0.0
+        rank = candidate.participant_ranks[participant_id]
+        rank_component = max(0.0, 1.0 - ((rank - 1) / max_rank))
+        bounds = affinity_bounds.get(participant_id)
+        affinity = candidate.participant_affinities.get(participant_id)
+        if bounds is None or affinity is None:
+            # No usable affinity for this participant: rank position alone (legacy behaviour).
+            return rank_component
+        low, high = bounds
+        affinity_norm = (affinity - low) / (high - low)
+        return (1.0 - AFFINITY_WEIGHT) * rank_component + AFFINITY_WEIGHT * affinity_norm
+
     for candidate in candidates:
-        per_person = [
-            max(0.0, 1.0 - ((candidate.participant_ranks[p] - 1) / max_rank))
-            if p in candidate.participant_ranks else 0.0
-            for p in participant_ids
-        ]
+        per_person = [person_score(p, candidate) for p in participant_ids]
         avg_score = sum(per_person) / participant_count
         min_score = min(per_person) if per_person else 0.0
         combined_score = (
             max(0.0, 1.0 - ((candidate.combined_rank - 1) / max_rank))
             if candidate.combined_rank else 0.0
         )
-        coverage = sum(1 for score in per_person if score > 0)
+        # Coverage counts participants whose individual results included this candidate,
+        # independent of affinity, so a 0-affinity match still counts as coverage.
+        coverage = sum(1 for p in participant_ids if p in candidate.participant_ranks)
         candidate.group_coverage = coverage
+        affinities = list(candidate.participant_affinities.values())
+        candidate.qloo_affinity = round(max(affinities), 4) if affinities else None
         # The coefficients are provisional and should be calibrated on evaluation cases.
         candidate.rank_score = round(0.60 * avg_score + 0.20 * min_score + 0.20 * combined_score, 4)
         candidate.maps_search_url = maps_search_url(candidate.name, location)
@@ -66,6 +159,11 @@ def rank_candidates(candidates: list[Candidate], participant_ids: list[str], loc
             candidate.reasons.append(f"Appeared in individual results for {coverage}/{participant_count} participants.")
         if candidate.combined_rank:
             candidate.reasons.append("Also appeared in the combined-profile results.")
+        if candidate.qloo_affinity is not None:
+            # Clearly a Qloo-provided signal, not our group heuristic.
+            candidate.reasons.append(
+                f"Qloo affinity signal present (max {candidate.qloo_affinity:.2f})."
+            )
         if candidate.source == "mock":
             candidate.verification_status = "demo"
     return sorted(candidates, key=lambda c: (c.rank_score, c.group_coverage, c.name), reverse=True)
@@ -115,15 +213,19 @@ def select_options(candidates: list[Candidate], participant_count: int) -> list[
                 "cultural_bridge": "This candidate appeared in multiple, but not all, individual result sets.",
                 "stretch_choice": "This candidate appeared in combined results and in no more than one individual result set.",
             }[option_type]
+        # These labels describe OUR calculation (coverage + heuristic + verification).
+        # Qloo's own signals (affinity number, matched interests) are surfaced separately
+        # on the candidate, so they are not duplicated here.
+        evidence_labels = [
+            f"Individual result coverage: {candidate.group_coverage}/{participant_count}",
+            "Rank score is a project heuristic, not a probability of enjoyment",
+            "Venue details have not been independently verified",
+        ]
         selected.append(RecommendationOption(
             option_type=actual_type,
             title=title if actual_type != "alternative" else "Alternative",
             candidate=candidate,
             explanation=explanation,
-            evidence_labels=[
-                f"Individual result coverage: {candidate.group_coverage}/{participant_count}",
-                "Rank score is a project heuristic, not a probability of enjoyment",
-                "Venue details have not been independently verified",
-            ],
+            evidence_labels=evidence_labels,
         ))
     return selected

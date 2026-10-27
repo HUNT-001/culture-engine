@@ -1,0 +1,522 @@
+{
+  "schema_version": "2.0",
+  "provenance": "synthetic placeholder ids; author-written types/disambiguation; NOT live Qloo payloads; NOT human-verified",
+  "outcomes": [
+    "auto_correct",
+    "auto_wrong",
+    "abstain",
+    "confirmed_correct",
+    "confirmed_wrong"
+  ],
+  "cases": [
+    {
+      "case_id": "g01_radiohead",
+      "query": "Radiohead",
+      "kind": "exact_unique",
+      "scenario_id": null,
+      "candidates": [
+        {
+          "entity_id": "artist:radiohead",
+          "name": "Radiohead",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "English rock band",
+          "popularity": 0.93
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:radiohead",
+        "name": "Radiohead",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "English rock band"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": ""
+    },
+    {
+      "case_id": "g02_studio_ghibli",
+      "query": "Studio Ghibli",
+      "kind": "exact_unique",
+      "scenario_id": null,
+      "candidates": [
+        {
+          "entity_id": "brand:studio-ghibli",
+          "name": "Studio Ghibli",
+          "types": [
+            "urn:entity:brand"
+          ],
+          "disambiguation": "Japanese animation studio",
+          "popularity": 0.9
+        }
+      ],
+      "intended": {
+        "entity_id": "brand:studio-ghibli",
+        "name": "Studio Ghibli",
+        "entity_type": "urn:entity:brand",
+        "disambiguation": "Japanese animation studio"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": ""
+    },
+    {
+      "case_id": "g03_phoenix",
+      "query": "Phoenix",
+      "kind": "exact_homonym_intended_not_first",
+      "scenario_id": "ambiguous_resolution_01",
+      "candidates": [
+        {
+          "entity_id": "destination:phoenix-az",
+          "name": "Phoenix",
+          "types": [
+            "urn:entity:destination"
+          ],
+          "disambiguation": "City in Arizona, United States",
+          "popularity": 0.88
+        },
+        {
+          "entity_id": "artist:phoenix-band",
+          "name": "Phoenix",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "French indie pop band",
+          "popularity": 0.71
+        },
+        {
+          "entity_id": "person:joaquin-phoenix",
+          "name": "Joaquin Phoenix",
+          "types": [
+            "urn:entity:person"
+          ],
+          "disambiguation": "American actor",
+          "popularity": 0.8
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:phoenix-band",
+        "name": "Phoenix",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "French indie pop band"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "Two entities share the exact name; the intended one is not first."
+    },
+    {
+      "case_id": "g04_titanic",
+      "query": "Titanic",
+      "kind": "exact_with_nonexact_distractor",
+      "scenario_id": "ambiguous_resolution_02",
+      "candidates": [
+        {
+          "entity_id": "movie:titanic-1997",
+          "name": "Titanic",
+          "types": [
+            "urn:entity:movie"
+          ],
+          "disambiguation": "1997 film",
+          "popularity": 0.95
+        },
+        {
+          "entity_id": "brand:titanic-belfast",
+          "name": "Titanic Belfast",
+          "types": [
+            "urn:entity:brand"
+          ],
+          "disambiguation": "Visitor attraction in Belfast",
+          "popularity": 0.4
+        }
+      ],
+      "intended": {
+        "entity_id": "movie:titanic-1997",
+        "name": "Titanic",
+        "entity_type": "urn:entity:movie",
+        "disambiguation": "1997 film"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": ""
+    },
+    {
+      "case_id": "g05_interpol",
+      "query": "Interpol",
+      "kind": "exact_homonym_intended_not_first",
+      "scenario_id": "ambiguous_resolution_03",
+      "candidates": [
+        {
+          "entity_id": "brand:interpol-org",
+          "name": "INTERPOL",
+          "types": [
+            "urn:entity:brand"
+          ],
+          "disambiguation": "International police organisation",
+          "popularity": 0.85
+        },
+        {
+          "entity_id": "artist:interpol-band",
+          "name": "Interpol",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "American post-punk band",
+          "popularity": 0.66
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:interpol-band",
+        "name": "Interpol",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "American post-punk band"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "Names differ only by case, so both are exact after normalization."
+    },
+    {
+      "case_id": "g06_pulp",
+      "query": "Pulp",
+      "kind": "exact_with_nonexact_distractor",
+      "scenario_id": "ambiguous_resolution_04",
+      "candidates": [
+        {
+          "entity_id": "movie:pulp-fiction",
+          "name": "Pulp Fiction",
+          "types": [
+            "urn:entity:movie"
+          ],
+          "disambiguation": "1994 film",
+          "popularity": 0.94
+        },
+        {
+          "entity_id": "artist:pulp-band",
+          "name": "Pulp",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "English britpop band",
+          "popularity": 0.62
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:pulp-band",
+        "name": "Pulp",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "English britpop band"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "The non-exact film is first; exact-match skips it."
+    },
+    {
+      "case_id": "g07_prince",
+      "query": "Prince",
+      "kind": "exact_with_nonexact_distractor",
+      "scenario_id": "ambiguous_resolution_05",
+      "candidates": [
+        {
+          "entity_id": "artist:prince",
+          "name": "Prince",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "American singer-songwriter",
+          "popularity": 0.92
+        },
+        {
+          "entity_id": "person:prince-william",
+          "name": "Prince William",
+          "types": [
+            "urn:entity:person"
+          ],
+          "disambiguation": "Prince of Wales",
+          "popularity": 0.83
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:prince",
+        "name": "Prince",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "American singer-songwriter"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": ""
+    },
+    {
+      "case_id": "g08_nirvana",
+      "query": "Nirvana",
+      "kind": "exact_homonym_intended_first",
+      "scenario_id": "ambiguous_resolution_06",
+      "candidates": [
+        {
+          "entity_id": "artist:nirvana-band",
+          "name": "Nirvana",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "American grunge band",
+          "popularity": 0.91
+        },
+        {
+          "entity_id": "tag:nirvana-concept",
+          "name": "Nirvana",
+          "types": [
+            "urn:tag"
+          ],
+          "disambiguation": "Buddhist concept",
+          "popularity": 0.3
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:nirvana-band",
+        "name": "Nirvana",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "American grunge band"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "Exact homonym, but the intended entity happens to be first."
+    },
+    {
+      "case_id": "g09_ghibli_short",
+      "query": "Ghibli",
+      "kind": "no_exact_intended_present",
+      "scenario_id": null,
+      "candidates": [
+        {
+          "entity_id": "brand:studio-ghibli",
+          "name": "Studio Ghibli",
+          "types": [
+            "urn:entity:brand"
+          ],
+          "disambiguation": "Japanese animation studio",
+          "popularity": 0.9
+        }
+      ],
+      "intended": {
+        "entity_id": "brand:studio-ghibli",
+        "name": "Studio Ghibli",
+        "entity_type": "urn:entity:brand",
+        "disambiguation": "Japanese animation studio"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "Intended entity is returned, but its name is not an exact match."
+    },
+    {
+      "case_id": "g10_beatles_no_article",
+      "query": "Beatles",
+      "kind": "no_exact_intended_present",
+      "scenario_id": null,
+      "candidates": [
+        {
+          "entity_id": "artist:the-beatles",
+          "name": "The Beatles",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "English rock band",
+          "popularity": 0.97
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:the-beatles",
+        "name": "The Beatles",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "English rock band"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": ""
+    },
+    {
+      "case_id": "g11_unresolvable",
+      "query": "zzqqxx nonexistent genre",
+      "kind": "unresolvable_expected",
+      "scenario_id": null,
+      "candidates": [],
+      "intended": null,
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "No entity exists; the only acceptable outcome is to abstain."
+    },
+    {
+      "case_id": "g12_case_normalization",
+      "query": "RADIOHEAD",
+      "kind": "normalization",
+      "scenario_id": null,
+      "candidates": [
+        {
+          "entity_id": "artist:radiohead",
+          "name": "Radiohead",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "English rock band",
+          "popularity": 0.93
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:radiohead",
+        "name": "Radiohead",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "English rock band"
+      },
+      "user_confirmation": null,
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "Typed in upper case; exact match is case-insensitive."
+    },
+    {
+      "case_id": "g13_phoenix_confirmed",
+      "query": "Phoenix",
+      "kind": "user_confirmed",
+      "scenario_id": null,
+      "candidates": [
+        {
+          "entity_id": "destination:phoenix-az",
+          "name": "Phoenix",
+          "types": [
+            "urn:entity:destination"
+          ],
+          "disambiguation": "City in Arizona, United States",
+          "popularity": 0.88
+        },
+        {
+          "entity_id": "artist:phoenix-band",
+          "name": "Phoenix",
+          "types": [
+            "urn:entity:artist"
+          ],
+          "disambiguation": "French indie pop band",
+          "popularity": 0.71
+        },
+        {
+          "entity_id": "person:joaquin-phoenix",
+          "name": "Joaquin Phoenix",
+          "types": [
+            "urn:entity:person"
+          ],
+          "disambiguation": "American actor",
+          "popularity": 0.8
+        }
+      ],
+      "intended": {
+        "entity_id": "artist:phoenix-band",
+        "name": "Phoenix",
+        "entity_type": "urn:entity:artist",
+        "disambiguation": "French indie pop band"
+      },
+      "user_confirmation": {
+        "entity_id": "artist:phoenix-band"
+      },
+      "acceptable_outcomes": [
+        "abstain",
+        "confirmed_correct"
+      ],
+      "review": {
+        "synthetic_ids": true,
+        "human_verified": false,
+        "live_verified": false
+      },
+      "note": "User picked the band in the picker; the overlay must bypass search."
+    }
+  ]
+}

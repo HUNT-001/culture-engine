@@ -21,6 +21,7 @@ htmlcov/
 # Node
 node_modules/
 dist/
+*.tsbuildinfo
 
 # Editors/OS
 .vscode/
@@ -31,3 +32,9 @@ Thumbs.db
 # local outputs
 outputs/
 *.log
+
+# Python package metadata
+*.egg-info/
+
+# CommonThreadBench: never commit anything derived from live Qloo responses
+backend/bench/results/live/

@@ -8,6 +8,7 @@ class RecommendationState(TypedDict, total=False):
     demo_mode: bool
     resolved_profiles: dict[str, list[dict[str, Any]]]
     unresolved_interests: list[str]
+    needs_confirmation: list[dict[str, str]]
     participant_batches: dict[str, list[dict[str, Any]]]
     combined_batch: list[dict[str, Any]]
     candidates: list[dict[str, Any]]
@@ -15,4 +16,6 @@ class RecommendationState(TypedDict, total=False):
     warnings: list[str]
     query_count: int
     error_code: str
+    provider_errors: list[str]
+    excluded_entity_ids: list[str]
     status: str

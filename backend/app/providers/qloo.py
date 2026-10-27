@@ -57,13 +57,59 @@ class QlooClient:
 
     @staticmethod
     def _result_list(data: dict[str, Any]) -> list[dict[str, Any]]:
-        """Normalize common collection wrappers; verify exact schema in live API tests."""
+        """Normalize common collection wrappers.
+
+        Verified against the live hackathon API (2026-10): Insights returns
+        ``{"success": true, "results": {"entities": [...]}, "query": {...}}`` and
+        ``/search`` returns ``{"results": [...]}``.
+        """
         current: Any = data.get("results", data.get("entities", []))
         if isinstance(current, dict):
             current = current.get("entities", current.get("results", current.get("items", [])))
         if not isinstance(current, list):
             return []
         return [item for item in current if isinstance(item, dict)]
+
+    @staticmethod
+    def _entity_subtype(item: dict[str, Any], default: str) -> str:
+        """Resolve a human-meaningful entity type.
+
+        Live Insights entities carry ``type="urn:entity"`` with the specific kind in
+        ``subtype`` (e.g. ``urn:entity:place``); ``/search`` entities carry a ``types``
+        list. Prefer the most specific available value.
+        """
+        subtype = item.get("subtype")
+        if isinstance(subtype, str) and subtype:
+            return subtype
+        types = item.get("types")
+        if isinstance(types, list) and types and isinstance(types[0], str):
+            return types[0]
+        for key in ("entity_type", "type"):
+            value = item.get(key)
+            if isinstance(value, str) and value and value != "urn:entity":
+                return value
+        return default
+
+    @staticmethod
+    def _extract_explanation(item: dict[str, Any]) -> dict[str, Any] | None:
+        """Extract only real Qloo-provided affinity/explainability evidence.
+
+        Live Insights places (with ``feature.explainability=true``) carry a ``query``
+        object: ``{"affinity": float, "explainability": {"signal.interests.entities":
+        [{"entity_id", "score"}, ...]}, ...}``. We surface these verbatim as evidence;
+        we never synthesize a score. Legacy field names are kept as fallbacks only.
+        """
+        query = item.get("query")
+        if isinstance(query, dict):
+            evidence: dict[str, Any] = {}
+            if "affinity" in query:
+                evidence["affinity"] = query.get("affinity")
+            if isinstance(query.get("explainability"), dict):
+                evidence["explainability"] = query.get("explainability")
+            if evidence:
+                return evidence
+        legacy = item.get("explanation") or item.get("explainability") or item.get("features")
+        return legacy if legacy else None
 
     async def search_entities(self, query: str, take: int = 5) -> list[dict]:
         # The current hackathon docs may use version-specific parameter conventions.
@@ -74,10 +120,12 @@ class QlooClient:
             entity_id = item.get("entity_id") or item.get("id") or item.get("qid")
             name = item.get("name") or item.get("name_label") or item.get("label")
             if entity_id and name:
+                disambiguation = item.get("disambiguation")
                 entities.append({
                     "entity_id": str(entity_id),
                     "name": str(name),
-                    "entity_type": item.get("type") or item.get("entity_type") or "unknown",
+                    "entity_type": self._entity_subtype(item, "unknown"),
+                    "disambiguation": str(disambiguation) if disambiguation else None,
                     "raw": item,
                 })
         return entities
@@ -104,11 +152,11 @@ class QlooClient:
                 continue
             properties = item.get("properties") if isinstance(item.get("properties"), dict) else {}
             address = properties.get("address") or item.get("address")
-            explanation = item.get("explanation") or item.get("explainability") or item.get("features")
+            explanation = self._extract_explanation(item)
             candidates.append(Candidate(
                 entity_id=str(entity_id),
                 name=str(name),
-                entity_type=str(item.get("type") or "urn:entity:place"),
+                entity_type=self._entity_subtype(item, "urn:entity:place"),
                 address=str(address) if address else None,
                 source="qloo",
                 combined_rank=None,

@@ -4,8 +4,15 @@ from uuid import uuid4
 from app.domain.schemas import Candidate, RecommendationOption, RecommendationRequest
 from app.providers.interfaces import QlooProvider, ComposerProvider
 from app.providers.qloo import QlooProviderError
-from app.services.ranking import merge_candidate_batches, rank_candidates, select_options
+from app.services.ranking import (
+    apply_hard_constraints,
+    merge_candidate_batches,
+    rank_candidates,
+    select_options,
+)
+from app.services.evidence import build_interest_index, matched_interest_names
 from app.services.provenance import validate_and_label_options
+from app.services.resolution import confirmed_index, normalize_name
 from app.workflows.state import RecommendationState
 
 
@@ -25,43 +32,54 @@ def build_nodes(deps: WorkflowDependencies):
             "demo_mode": deps.demo_mode,
             "warnings": list(state.get("warnings", [])),
             "query_count": 0,
+            "provider_errors": [],
             "status": "running",
             "_validated_request": request.model_dump(),
         }
 
     async def resolve_entities(state: RecommendationState) -> dict[str, Any]:
+        """Bind only interests the user explicitly confirmed to a Qloo entity.
+
+        An interest without a confirmed entity is never searched for, matched by name, or
+        taken from a first result: it is excluded from retrieval and reported back (as
+        `unresolved_interests` and a structured `needs_confirmation` entry) so the user can
+        confirm which entity they mean. Original wording and confirmed ids pass through as-is.
+        """
         request = RecommendationRequest.model_validate(state["_validated_request"])
         resolved: dict[str, list[dict[str, Any]]] = {}
         unresolved: list[str] = []
-        cache: dict[str, list[dict[str, Any]]] = {}
+        needs_confirmation: list[dict[str, str]] = []
         for participant in request.participants:
             resolved[participant.participant_id] = []
+            confirmed = confirmed_index(participant.resolved_interests)
             for term in participant.interests:
-                key = term.casefold().strip()
-                if key not in cache:
-                    try:
-                        cache[key] = await deps.qloo.search_entities(term, take=3)
-                    except QlooProviderError as exc:
-                        raise exc
-                matches = cache[key]
-                if not matches:
+                match = confirmed.get(normalize_name(term))
+                if match is None:
                     unresolved.append(f"{participant.display_name}: {term}")
+                    needs_confirmation.append({
+                        "participant_id": participant.participant_id,
+                        "display_name": participant.display_name,
+                        "text": term,
+                    })
                     continue
-                # Skeleton policy: use the first search result. Add explicit user confirmation UI
-                # when live search commonly returns ambiguous results; don't silently guess in prod.
-                selected = matches[0]
                 resolved[participant.participant_id].append({
                     "input": term,
-                    "entity_id": str(selected["entity_id"]),
-                    "name": str(selected["name"]),
-                    "entity_type": selected.get("entity_type", "unknown"),
+                    "entity_id": match["entity_id"],
+                    "name": match["name"],
+                    "entity_type": match.get("entity_type", "unknown"),
                 })
+        warnings = list(state.get("warnings", []))
         if unresolved:
-            warnings = list(state.get("warnings", []))
-            warnings.append("Some interests could not be resolved and were excluded.")
-        else:
-            warnings = list(state.get("warnings", []))
-        return {"resolved_profiles": resolved, "unresolved_interests": unresolved, "warnings": warnings}
+            warnings.append(
+                "Some interests were not confirmed to a specific Qloo entity and were excluded. "
+                "Confirm which entity you mean, then run again."
+            )
+        return {
+            "resolved_profiles": resolved,
+            "unresolved_interests": unresolved,
+            "needs_confirmation": needs_confirmation,
+            "warnings": warnings,
+        }
 
     async def retrieve_insights(state: RecommendationState) -> dict[str, Any]:
         request = RecommendationRequest.model_validate(state["_validated_request"])
@@ -69,6 +87,7 @@ def build_nodes(deps: WorkflowDependencies):
         batches: dict[str, list[dict[str, Any]]] = {}
         query_count = 0
         warnings = list(state.get("warnings", []))
+        provider_errors = list(state.get("provider_errors", []))
         try:
             all_ids = []
             for participant in request.participants:
@@ -96,6 +115,7 @@ def build_nodes(deps: WorkflowDependencies):
         except QlooProviderError as exc:
             # Keep partial participant batches if any, rather than discarding valid results.
             warnings.append(f"Cultural recommendation retrieval was limited ({exc.code}).")
+            provider_errors.append(exc.code)
             combined = []
             if not batches:
                 batches = {p.participant_id: [] for p in request.participants}
@@ -104,6 +124,7 @@ def build_nodes(deps: WorkflowDependencies):
             "combined_batch": combined,
             "query_count": query_count,
             "warnings": warnings,
+            "provider_errors": provider_errors,
         }
 
     async def normalize_candidates(state: RecommendationState) -> dict[str, Any]:
@@ -114,8 +135,26 @@ def build_nodes(deps: WorkflowDependencies):
         combined = [Candidate.model_validate(c) for c in state.get("combined_batch", [])]
         merged = merge_candidate_batches(batches, combined)
         request = RecommendationRequest.model_validate(state["_validated_request"])
+        dislikes = [term for p in request.participants for term in p.dislikes]
+        merged, excluded = apply_hard_constraints(merged, dislikes)
+        warnings = list(state.get("warnings", []))
+        if excluded:
+            warnings.append(
+                f"{len(excluded)} candidate(s) were excluded because they matched a participant's stated dislike."
+            )
         ranked = rank_candidates(merged, [p.participant_id for p in request.participants], request.location)
-        return {"candidates": [c.model_dump() for c in ranked]}
+        # Translate Qloo explainability signals back to the group's resolved interests,
+        # using only the verified names captured during entity resolution (no new calls).
+        interest_index = build_interest_index(state.get("resolved_profiles", {}))
+        for candidate in ranked:
+            candidate.matched_interests = matched_interest_names(
+                candidate.qloo_explanation, interest_index
+            )
+        return {
+            "candidates": [c.model_dump() for c in ranked],
+            "excluded_entity_ids": excluded,
+            "warnings": warnings,
+        }
 
     async def rank_options(state: RecommendationState) -> dict[str, Any]:
         request = RecommendationRequest.model_validate(state["_validated_request"])
@@ -127,6 +166,18 @@ def build_nodes(deps: WorkflowDependencies):
         options = [RecommendationOption.model_validate(o) for o in state.get("options", [])]
         options = validate_and_label_options(options, deps.demo_mode)
         warnings = list(state.get("warnings", []))
+        request = RecommendationRequest.model_validate(state["_validated_request"])
+        if request.budget_per_person is not None:
+            warnings.append(
+                "Budget was recorded but venue prices are not available from the current data source, "
+                "so it has not been checked."
+            )
+        represented = {pid for option in options for pid in option.candidate.participant_ranks}
+        for participant in request.participants:
+            if options and participant.participant_id not in represented:
+                warnings.append(
+                    f"None of the selected options appeared in {participant.display_name}'s individual results."
+                )
         if len(options) < 3:
             warnings.append("Fewer than three distinct, evidence-backed options were available.")
         if not options:
@@ -151,11 +202,19 @@ def build_nodes(deps: WorkflowDependencies):
                 pass
             options.append(option.model_dump())
         status = "complete" if len(options) >= 3 else ("partial" if options else "failed")
+        if status == "complete" and state.get("needs_confirmation"):
+            # Excluded (unconfirmed) interests mean the result does not reflect everyone.
+            status = "partial"
         return {"options": options, "status": status}
 
     async def validate_output(state: RecommendationState) -> dict[str, Any]:
         # Parse output schemas before returning. Do not let the LLM create arbitrary candidates.
-        validated = [RecommendationOption.model_validate(o).model_dump() for o in state.get("options", [])]
+        excluded = set(state.get("excluded_entity_ids", []))
+        validated = [
+            RecommendationOption.model_validate(o).model_dump()
+            for o in state.get("options", [])
+            if o["candidate"]["entity_id"] not in excluded
+        ]
         return {"options": validated}
 
     return {

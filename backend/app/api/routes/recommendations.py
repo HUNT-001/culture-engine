@@ -1,5 +1,5 @@
 from uuid import uuid4
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from app.domain.schemas import RecommendationRequest, RecommendationResponse
 from app.providers.qloo import QlooProviderError
 from app.services.runtime import get_runtime
@@ -7,9 +7,8 @@ from app.services.runtime import get_runtime
 router = APIRouter(tags=["recommendations"])
 
 
-@router.post("/recommendations", response_model=RecommendationResponse)
-async def create_recommendations(request: RecommendationRequest):
-    runtime = get_runtime()
+async def execute_workflow(runtime: dict, request: RecommendationRequest) -> RecommendationResponse:
+    """Run the bounded workflow and map provider failures to the documented error policy."""
     run_id = str(uuid4())
     try:
         result = await runtime["graph"].ainvoke({"request": request.model_dump(), "run_id": run_id})
@@ -21,6 +20,13 @@ async def create_recommendations(request: RecommendationRequest):
 
     options = result.get("options", [])
     status = result.get("status", "partial" if options else "failed")
+    provider_errors = result.get("provider_errors", [])
+    if not options and provider_errors:
+        # 503 only when the provider failed and there is no valid partial result.
+        raise HTTPException(
+            status_code=503,
+            detail={"code": provider_errors[0], "message": "Cultural data provider is unavailable. Try again."},
+        )
     return RecommendationResponse(
         run_id=result.get("run_id", run_id),
         demo_mode=bool(result.get("demo_mode", runtime["settings"].mock_providers)),
@@ -28,5 +34,11 @@ async def create_recommendations(request: RecommendationRequest):
         options=options,
         warnings=result.get("warnings", []),
         unresolved_interests=result.get("unresolved_interests", []),
+        needs_confirmation=result.get("needs_confirmation", []),
         status=status,
     )
+
+
+@router.post("/recommendations", response_model=RecommendationResponse)
+async def create_recommendations(request: RecommendationRequest, runtime: dict = Depends(get_runtime)):
+    return await execute_workflow(runtime, request)

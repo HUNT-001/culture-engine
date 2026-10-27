@@ -21,6 +21,9 @@ class DeterministicComposer:
             label = "Synthetic demo result only; this is not a real venue recommendation."
         if count:
             label += f" It appeared in {count} participant-specific ranking(s)."
+        # Qloo's own signals (affinity number, matched interests) are shown separately on
+        # the card, so the explanation stays focused on our group-fit reasoning and does
+        # not repeat them.
         return {"explanation": f"{label} Candidate: {name}."}
 
 
