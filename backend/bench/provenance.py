@@ -18,7 +18,8 @@ PRODUCTION_FUNCTION = "production-function"
 # service. Never call this "live".
 MOCKED_INTEGRATION = "mocked-integration"
 
-# A request that actually reached the Qloo hackathon API. None in v2 (budget: 0).
+# A request that actually reached the Qloo hackathon API. No reported benchmark number uses
+# one; a separate bounded live observation (12 /search requests) is described in the docs.
 LIVE_REQUEST = "live-request"
 
 # Ratings from real people. None collected yet.
@@ -37,6 +38,6 @@ LEGEND = {
     PRODUCTION_FUNCTION: "a real production function called with synthetic inputs",
     MOCKED_INTEGRATION: ("real adapter/workflow/routes over mock HTTP fixtures; "
                          "not the real Qloo service"),
-    LIVE_REQUEST: "a request that reached the live Qloo API (none in v2)",
+    LIVE_REQUEST: "a request that reached the live Qloo API (none behind any reported number)",
     HUMAN_STUDY: "ratings from real participants (none collected yet)",
 }

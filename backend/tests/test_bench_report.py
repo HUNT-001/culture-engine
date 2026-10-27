@@ -69,7 +69,7 @@ def test_rendered_report_labels_v1_as_historical_and_separates_sections(results)
               "## 5. Fault resilience — `mocked-integration`, end to end",
               "## 6. Live Qloo — `live-request`", "## 7. Human evaluation — `human-study`"):
         assert h in md
-    assert "**Requests made in v2: 0.**" in md and "PENDING" in md
+    assert "**Live requests made by this offline benchmark: 0.**" in md and "PENDING" in md
 
 
 def test_held_out_is_reported_separately_from_development(results):

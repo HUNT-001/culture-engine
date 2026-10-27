@@ -1,13 +1,14 @@
 """Exact live-request budget a later validation slice would need. Makes ZERO requests.
 
 Counts come from the mocked-integration request logs of the real workflow, so they follow
-the production request pattern (one ``/search`` per distinct unconfirmed interest term, one
-``/v2/insights`` per participant with resolved ids, plus one combined query, capped at
-``qloo_max_insights_calls``). They are an **upper bound**: against the live service some
-typed phrases will not exact-match a Qloo entity name, stay unresolved, and issue fewer
-Insights calls.
+the production request pattern: a run makes no ``/search`` request (only user-confirmed
+interests are used; the simulated user's picker searches are not counted here), one
+``/v2/insights`` per participant with confirmed ids, plus one combined query, capped at
+``qloo_max_insights_calls``. They are an **upper bound**: against the live service a
+participant may have no confirmed interest and issue fewer Insights calls.
 
-A live slice must be authorised separately. Nothing in v2 sends a live request.
+L0 and L1 have since been run (12 ``/search`` requests, observation only); L2 has not, and
+must be authorised separately. This module itself never sends a request.
 """
 from __future__ import annotations
 
@@ -52,5 +53,5 @@ def plan() -> dict:
         "total_upper_bound": probe + gold + scenario_total,
         "bounds": ("Insights calls per run are capped at 5 by Settings.qloo_max_insights_calls; "
                    "no retries exist in the adapter, so a failed call is not repeated."),
-        "authorisation": "required separately; not requested or used in v2",
+        "authorisation": "required separately; L0 and L1 have been run, L2 has not",
     }

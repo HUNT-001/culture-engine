@@ -1,7 +1,10 @@
-# API Contracts (initial)
+# API Contracts
 
 ## `GET /api/health`
-Returns basic service health and whether providers are in mock mode. Never return credentials or environment dumps.
+Returns `{status: "ok", environment, demo_mode}`; `demo_mode` is `true` when the backend runs on mock providers. Never returns credentials or environment dumps. In live mode (`MOCK_PROVIDERS=false`) without a `QLOO_API_KEY` the provider runtime cannot start, so this endpoint fails instead of silently serving mock data.
+
+## `GET /api/entities/search`
+The interest picker's source of candidates; the only route that calls Qloo's search. Query: `query` (2–100 characters, required) and `take` (1–8, default 5). Response: `{query, demo_mode, candidates: [{entity_id, name, entity_type, disambiguation?, source}]}` where `source` is `"qloo"` for a real Qloo entity and `"mock"` for a synthetic demo entity, which is never a real match. Errors: `422` invalid input; `503` retryable provider failure (timeout, rate limit, upstream error); `502` non-retryable provider failure (e.g. rejected credentials); no provider body or key is ever returned.
 
 ## `POST /api/recommendations`
 Request shape:
@@ -19,7 +22,7 @@ Request shape:
 }
 ```
 
-Response includes run ID, `demo_mode`, options, ranking reasons, source/evidence markers, Maps search URLs, warnings, `unresolved_interests` and a structured `needs_confirmation` list (`{participant_id, display_name, text}`).
+Response (`RecommendationResponse`): `run_id`, `demo_mode`, `location`, `options` (each with ranking reasons, `evidence_labels`, Qloo affinity, `matched_interests` and a Maps search URL), `warnings`, `unresolved_interests`, a structured `needs_confirmation` list (`{participant_id, display_name, text}`) and `status` (`complete`, `partial` or `failed`). `demo_mode` is `true` for mock providers; mock venues carry `source: "mock"` and verification status `demo`, live venues are `unverified`.
 
 **Entity confirmation (no silent matching).** The server binds an interest to a Qloo entity only when the request carries the user's explicit confirmation for it: a `resolved_interests` entry whose `text` equals the typed interest (case/whitespace-insensitive). Candidates come from `GET /api/entities/search`; the user picks one. An interest without a confirmation is never searched for, never taken from a first result and never accepted because a result's name matches exactly (one name can denote several entities). It is left out of the run and reported in `unresolved_interests` and `needs_confirmation`, a warning says so, and `status` is never `complete` while anything was left out. The typed wording and the confirmed `entity_id` are used exactly as sent. A run makes no `/search` request. The same rules apply to `POST /api/plans/{plan_id}/recommendations`, which uses the confirmations saved with each participant's preferences.
 
@@ -40,7 +43,8 @@ Participants without interests are left out of a run with a warning. Dislikes ar
 ## Error policy
 
 - `422`: invalid input.
-- `503`: required provider unavailable and no valid partial result.
+- `503`: required provider unavailable and no valid partial result (`/api/recommendations` and the plan run route; a plan run that returns `503` stores no run).
+- `200` with `status: "failed"` and an empty `options` list: nothing could be recommended without a provider error, e.g. no interest was confirmed. A stored `failed` run does not mark the plan as recommended.
 - `200` with warnings: valid but limited candidate set.
 - Never return raw provider stack traces or secrets.
 

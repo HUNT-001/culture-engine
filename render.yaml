@@ -1,3 +1,11 @@
+# Render Blueprint for the BACKEND API only.
+#
+# The React frontend is NOT deployed by this file: host it separately as a static site
+# (Cloudflare Pages or a Render Static Site: root `frontend`, build `npm ci && npm run build`,
+# publish `dist`, env VITE_API_BASE_URL=https://<this-service-host>/api). See README.md.
+#
+# Every value marked `sync: false` is entered in the Render dashboard when the Blueprint is
+# created and is never stored in git. Do not put secrets or connection strings in this file.
 services:
   - type: web
     name: common-thread-api
@@ -10,9 +18,17 @@ services:
     envVars:
       - key: APP_ENV
         value: production
+      # "true" = synthetic demo data (also the app's default when unset);
+      # "false" = live Qloo, which requires QLOO_API_KEY. Check /api/health -> demo_mode.
       - key: MOCK_PROVIDERS
-        value: "true"
+        sync: false
+      # Qloo hackathon API key. Backend only; needed when MOCK_PROVIDERS=false.
+      - key: QLOO_API_KEY
+        sync: false
+      # Exact frontend origin(s), comma-separated, no trailing slash or path.
       - key: CORS_ORIGINS
         sync: false
+      # Persistent PostgreSQL, psycopg 3 form: postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME
+      # Do not rely on the SQLite default: a free host's disk is wiped on redeploy.
       - key: DATABASE_URL
         sync: false

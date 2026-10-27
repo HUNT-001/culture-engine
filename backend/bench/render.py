@@ -26,8 +26,10 @@ def render_markdown(res: dict) -> str:
     w(f"*Benchmark version* `{res['bench_version']}` · *required application checkpoint* "
       f"`{res['required_checkpoint']}` · regenerate with `python -m bench.run_benchmark`.")
     w("")
-    w("> **Read this first.** Every number below carries a provenance tag. No number comes from "
-      "a live request or a human study. Fixtures are synthetic; \"mocked-integration\" means the "
+    w("> **Read this first.** Every number below carries a provenance tag. No number in this "
+      "report comes from a live request or a human study (a separate, bounded live observation "
+      "is described in section 6; it produced no accuracy figures and none of its data is "
+      "included). Fixtures are synthetic; \"mocked-integration\" means the "
       "real adapter, workflow and routes ran against Qloo-shaped mock HTTP, **not** the real "
       "Qloo service. v1 figures (9.3%, 55.6%, 50%, 100%) were measured against a stale "
       "revision and mostly against the benchmark's own fixtures; they are historical and are "
@@ -221,11 +223,13 @@ def render_markdown(res: dict) -> str:
     lv = res["live"]
     w("## 6. Live Qloo — `live-request`")
     w("")
-    w(f"**Requests made in v2: {lv['requests_made_in_v2']}.** {lv['status']}")
+    w(f"**Live requests made by this offline benchmark: {lv['requests_made_in_v2']}.** "
+      f"Status: {lv['status']}")
     w("")
     pl = lv["planned_budget_for_next_slice"]
-    w(f"Budget a subsequent, separately authorised validation would need "
-      f"(**upper bound {pl['total_upper_bound']}**):")
+    w(f"Planned live budget (**upper bound {pl['total_upper_bound']}**). Phases L0 and L1 "
+      f"have been run (see above); L2, the workflow scenarios, has **not** been run and would "
+      f"need separate authorisation:")
     w("")
     w("| Phase | Requests |")
     w("|---|---|")

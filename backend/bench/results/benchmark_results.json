@@ -38,7 +38,7 @@
     "synthetic-arithmetic": "benchmark-side arithmetic on synthetic inputs; checks metric maths only",
     "production-function": "a real production function called with synthetic inputs",
     "mocked-integration": "real adapter/workflow/routes over mock HTTP fixtures; not the real Qloo service",
-    "live-request": "a request that reached the live Qloo API (none in v2)",
+    "live-request": "a request that reached the live Qloo API (none behind any reported number)",
     "human-study": "ratings from real participants (none collected yet)"
   },
   "dataset": {
@@ -7972,7 +7972,7 @@
   "live": {
     "provenance": "live-request",
     "requests_made_in_v2": 0,
-    "status": "none. The 43-request v1 spike ran against the stale 2b3f56c adapter and is historical, not evidence about the checkpoint.",
+    "status": "this offline benchmark itself makes no live requests. Separately, one bounded live phase was run during development: 12 `/search` requests (1 probe + 11 entity searches, no Insights) through the checkpoint's `QlooClient`. It was an observation, not a measurement: none of its 11 cases has been independently verified, so no live Recall@5 or MRR exists, and the raw candidate lists are deliberately not committed (the hackathon terms restrict redistributing Qloo responses). Qualitatively it showed that the same name can belong to entities of different types, that disambiguation text is often uninformative, that one entity id can appear under more than one type, and that an unresolvable phrase still returns fuzzy candidates; these are why the product now requires explicit confirmation of every interest. The 43-request v1 spike ran against the stale 2b3f56c adapter and is historical, not evidence about the checkpoint.",
     "planned_budget_for_next_slice": {
       "live_requests_made_by_this_benchmark": 0,
       "phases": [
@@ -8042,7 +8042,7 @@
       ],
       "total_upper_bound": 31,
       "bounds": "Insights calls per run are capped at 5 by Settings.qloo_max_insights_calls; no retries exist in the adapter, so a failed call is not repeated.",
-      "authorisation": "required separately; not requested or used in v2"
+      "authorisation": "required separately; L0 and L1 have been run, L2 has not"
     }
   },
   "human_evaluation": {

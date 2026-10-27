@@ -2,14 +2,14 @@
 
 *Benchmark version* `2.0` · *required application checkpoint* `746ee952f7569d630f0a4488e5f75e6ece432060` · regenerate with `python -m bench.run_benchmark`.
 
-> **Read this first.** Every number below carries a provenance tag. No number comes from a live request or a human study. Fixtures are synthetic; "mocked-integration" means the real adapter, workflow and routes ran against Qloo-shaped mock HTTP, **not** the real Qloo service. v1 figures (9.3%, 55.6%, 50%, 100%) were measured against a stale revision and mostly against the benchmark's own fixtures; they are historical and are **not** reproduced here (see `docs/benchmark-history/`).
+> **Read this first.** Every number below carries a provenance tag. No number in this report comes from a live request or a human study (a separate, bounded live observation is described in section 6; it produced no accuracy figures and none of its data is included). Fixtures are synthetic; "mocked-integration" means the real adapter, workflow and routes ran against Qloo-shaped mock HTTP, **not** the real Qloo service. v1 figures (9.3%, 55.6%, 50%, 100%) were measured against a stale revision and mostly against the benchmark's own fixtures; they are historical and are **not** reproduced here (see `docs/benchmark-history/`).
 
 | Tag | Meaning |
 |---|---|
 | `synthetic-arithmetic` | benchmark-side arithmetic on synthetic inputs; checks metric maths only |
 | `production-function` | a real production function called with synthetic inputs |
 | `mocked-integration` | real adapter/workflow/routes over mock HTTP fixtures; not the real Qloo service |
-| `live-request` | a request that reached the live Qloo API (none in v2) |
+| `live-request` | a request that reached the live Qloo API (none behind any reported number) |
 | `human-study` | ratings from real participants (none collected yet) |
 
 ## 0. Baseline guard
@@ -178,9 +178,9 @@ end-to-end: mock HTTP -> QlooClient -> workflow -> FastAPI route. Expectations c
 
 ## 6. Live Qloo — `live-request`
 
-**Requests made in v2: 0.** none. The 43-request v1 spike ran against the stale 2b3f56c adapter and is historical, not evidence about the checkpoint.
+**Live requests made by this offline benchmark: 0.** Status: this offline benchmark itself makes no live requests. Separately, one bounded live phase was run during development: 12 `/search` requests (1 probe + 11 entity searches, no Insights) through the checkpoint's `QlooClient`. It was an observation, not a measurement: none of its 11 cases has been independently verified, so no live Recall@5 or MRR exists, and the raw candidate lists are deliberately not committed (the hackathon terms restrict redistributing Qloo responses). Qualitatively it showed that the same name can belong to entities of different types, that disambiguation text is often uninformative, that one entity id can appear under more than one type, and that an unresolvable phrase still returns fuzzy candidates; these are why the product now requires explicit confirmation of every interest. The 43-request v1 spike ran against the stale 2b3f56c adapter and is historical, not evidence about the checkpoint.
 
-Budget a subsequent, separately authorised validation would need (**upper bound 31**):
+Planned live budget (**upper bound 31**). Phases L0 and L1 have been run (see above); L2, the workflow scenarios, has **not** been run and would need separate authorisation:
 
 | Phase | Requests |
 |---|---|

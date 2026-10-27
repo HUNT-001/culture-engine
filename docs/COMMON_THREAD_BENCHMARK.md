@@ -40,8 +40,18 @@ v2 fixes the cause and the symptom:
 | `synthetic-arithmetic` | benchmark-side arithmetic on synthetic inputs; verifies metric maths only |
 | `production-function` | a real production function called directly with synthetic inputs |
 | `mocked-integration` | the **real** `QlooClient`, workflow and API routes driven by Qloo-shaped fixtures over an in-process `httpx.MockTransport`. Real production code, **not** the real Qloo service. Never call this "live". |
-| `live-request` | a request that reached the Qloo API — **none in v2** |
+| `live-request` | a request that reached the Qloo API — **no reported number uses one**; a separate bounded live observation is described in §10 |
 | `human-study` | ratings from real people — **none collected** |
+
+**What each kind of evidence does and does not show**
+
+| Evidence | What exists | What it shows | What it does not show |
+|---|---|---|---|
+| Synthetic offline evaluation (`synthetic-arithmetic`, `production-function`, `mocked-integration`) | All figures in the results document | How our code behaves on invented, Qloo-shaped data | How the real Qloo service behaves, or whether recommendations are good |
+| Live observation (`live-request`) | 12 `/search` requests, qualitative notes only (§10) | Real ambiguity in Qloo's entity search | Any accuracy figure: none of its cases is independently verified |
+| Human evaluation (`human-study`) | Protocol and scripts only; **pending** | — | Whether people prefer these recommendations (§11) |
+
+Withdrawn v1 accuracy figures are not part of this evidence (§9).
 
 ## 3. How v2 exercises production code
 
@@ -185,7 +195,7 @@ The measured function-by-test table is in the function map document.
 | Ranking: all servable participants served (47 scenarios) | rank_aggregation 46, production 46, affinity_only 45, popularity 43 | `production-function` / `synthetic-arithmetic` |
 | Ranking: mean worst-member best rank (↓ better) | rank_aggregation 1.07, affinity_only 1.47, production 1.54, popularity 2.40 | same |
 | Affinity's effect on production's top 3 | Jaccard 0.94 vs the no-affinity run | `production-function` |
-| Live requests / human participants | **0 / 0** | — |
+| Live requests made by this benchmark / human participants | **0 / 0** (a separate bounded live observation: §10) | — |
 
 `rank_aggregation` optimises something close to *worst-member best rank*, so that column
 favours it by construction.
@@ -233,21 +243,36 @@ a venue for the whole group; ties break by name descending.
 
 The v1 documents are preserved, bannered, in [`benchmark-history/`](benchmark-history/).
 
-## 10. Live-request budget for a later slice (none used here)
+## 10. Live requests: what was run, what was not
 
-Computed from the mocked runs' own request logs; an **upper bound** (against the real
+**Run (observation only).** One bounded live phase of **12 `/search` requests** (1 probe + 11 entity
+searches, no Insights) through the checkpoint's `QlooClient`, hard-capped at 12 by two independent
+counters. The candidate lists were prepared for hand review, but **0 of 11 cases is independently
+verified**, so no live Recall@5 / MRR is reported (the scorer returns `None` until a case is
+independently verified). Raw candidates are not committed (`bench/results/live/` is git-ignored; the
+hackathon terms restrict redistributing Qloo responses). Qualitative observations: the same name can
+belong to entities of different types; disambiguation text is often uninformative; one entity id can
+appear under more than one type; an unresolvable phrase still returns fuzzy candidates. These informed
+the decision to require explicit user confirmation of every interest.
+
+**Not run.** Phase L2 (six scenarios through the full workflow, including Insights) and any live
+ranking or evidence evaluation. Nothing in the figures of this document depends on live data.
+
+**Remaining budget** for a later, separately authorised slice:
+
+The table below is computed from the mocked runs' own request logs; an **upper bound** (against the real
 service a run issues no `/search` calls at all and the number of Insights calls depends only on the confirmed interests). Insights
 calls per run are capped at 5; the adapter has no retries.
 
 | Phase | Purpose | Requests |
 |---|---|---|
-| L0 | reachability probe of the checkpoint adapter | 1 |
-| L1 | one `/search` per distinct gold query, to replace synthetic ids with reviewed real ids and measure real Recall@5/MRR | 11 |
-| L2 | six representative scenarios through the checkpoint workflow | 43 (6+7+9+7+7+7) |
-| **Total** | | **≤ 55** |
+| L0 | reachability probe of the checkpoint adapter — **run** | 1 |
+| L1 | one `/search` per distinct gold query — **run**; real-id gold and Recall@5/MRR still need independent verification | 11 |
+| L2 | six representative scenarios through the checkpoint workflow (Insights calls only; the picker searches a real user would make are not counted) — **not run** | 19 |
+| **Total** | | **≤ 31** |
 
 `bench/run_live_qloo.py` refuses to run without `--confirm-live` and aborts at a hard
-request cap. It needs separate authorisation and was not run.
+request cap. `--resolution` runs L0+L1 only (as above); the workflow scenarios (L2) need separate authorisation and were not run.
 
 ## 11. Human evaluation (retained, pending)
 
