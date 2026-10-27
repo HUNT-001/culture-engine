@@ -1,3 +1,5 @@
+> **Historical.** This is the first build plan, written before implementation. Most items are done or have changed; it is kept for context and is not a status tracker. See the root `README.md` for the current system.
+
 # Build Order / Definition of Done
 
 ## Milestone 0 — verify provider contract

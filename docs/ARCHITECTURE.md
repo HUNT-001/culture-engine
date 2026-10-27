@@ -6,13 +6,18 @@ The frontend is untrusted. It may submit participant preferences and receive a s
 
 ## Core modules
 
-1. `app/api`: HTTP contract, request validation and response codes.
-2. `app/domain`: Pydantic domain schemas and immutable recommendation structures.
-3. `app/workflows`: typed LangGraph state, nodes and conditional transitions.
-4. `app/providers`: adapter interfaces and provider-specific HTTP behavior.
-5. `app/services/ranking.py`: deterministic ranking algorithm.
-6. `app/services/provenance.py`: source/evidence checks and Maps links.
-7. `app/db`: SQLAlchemy models, engine/session and repository boundaries.
+Diagrams of the full stack, the agent workflow and the scoring live in the root [`README.md`](../README.md).
+
+1. `app/api/routes`: HTTP contract, request validation and response codes (`health`, `entities`, `recommendations`, `plans`).
+2. `app/domain`: Pydantic schemas for requests, plans and recommendation results.
+3. `app/workflows`: the typed LangGraph state, node functions and the fixed graph.
+4. `app/providers`: provider interfaces, the Qloo `httpx` adapter, the demo mock and the response composer.
+5. `app/services/resolution.py`: entity-resolution policy (only user-confirmed entities are bound).
+6. `app/services/ranking.py`: deterministic per-person and group ranking, option selection.
+7. `app/services/evidence.py` and `provenance.py`: mapping Qloo signals to the group's interests; live/demo labelling and Maps search links.
+8. `app/services/runtime.py`: wires mock or live providers from settings.
+9. `app/db`: SQLAlchemy models, engine/session and the plan repository (SQLite locally, PostgreSQL in production).
+10. `app/core`: environment-driven settings and token hashing.
 
 ## Trust boundaries
 
