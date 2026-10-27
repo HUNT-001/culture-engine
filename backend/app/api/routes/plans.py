@@ -11,6 +11,7 @@ from app.core.config import Settings, get_settings
 from app.db import repository as repo
 from app.db.models import ParticipantModel, PlanModel
 from app.db.session import get_db
+from app.domain.currency import DEFAULT_CURRENCY
 from app.domain.schemas import (
     JoinPlanRequest,
     JoinPlanResponse,
@@ -76,7 +77,9 @@ def create_plan(
     body: PlanCreateRequest, db: Session = Depends(get_db), settings: Settings = Depends(get_settings)
 ):
     repo.purge_expired_plans(db)
-    plan, token = repo.create_plan(db, body.location, body.budget_per_person, settings.plan_ttl_hours)
+    plan, token = repo.create_plan(
+        db, body.location, body.budget_per_person, settings.plan_ttl_hours, body.budget_currency
+    )
     return PlanCreatedResponse(plan_id=plan.id, share_token=token, expires_at=repo.as_utc(plan.expires_at))
 
 
@@ -93,6 +96,7 @@ def get_plan(
         plan_id=plan.id,
         location=plan.location,
         budget_per_person=plan.budget_per_person,
+        budget_currency=plan.budget_currency or DEFAULT_CURRENCY,
         status=plan.status,
         expires_at=repo.as_utc(plan.expires_at),
         max_participants=settings.max_participants,
@@ -155,6 +159,7 @@ async def run_plan_recommendations(
     request = RecommendationRequest(
         location=plan.location,
         budget_per_person=plan.budget_per_person,
+        budget_currency=plan.budget_currency or DEFAULT_CURRENCY,
         participants=[
             ParticipantInput(
                 participant_id=v.participant_id,

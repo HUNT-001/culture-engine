@@ -1,8 +1,15 @@
 from datetime import datetime
-from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+from typing import Annotated, Any, Literal
+from pydantic import (
+    AfterValidator, BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator,
+)
+
+from app.domain.currency import DEFAULT_CURRENCY, normalize_currency
 
 MAX_TERM_LENGTH = 100
+
+# ISO 4217 code, upper-cased and checked against the supported list.
+CurrencyCode = Annotated[str, AfterValidator(normalize_currency)]
 
 
 def _clean_terms(values: list[str], info: ValidationInfo) -> list[str]:
@@ -58,6 +65,7 @@ class RecommendationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     location: str = Field(min_length=2, max_length=160)
     budget_per_person: float | None = Field(default=None, gt=0, le=100000)
+    budget_currency: CurrencyCode = DEFAULT_CURRENCY
     participants: list[ParticipantInput] = Field(min_length=2, max_length=4)
 
     @field_validator("location")
@@ -134,6 +142,7 @@ class PlanCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     location: str = Field(min_length=2, max_length=160)
     budget_per_person: float | None = Field(default=None, gt=0, le=100000)
+    budget_currency: CurrencyCode = DEFAULT_CURRENCY
 
     @field_validator("location")
     @classmethod
@@ -214,6 +223,7 @@ class PlanView(BaseModel):
     plan_id: str
     location: str
     budget_per_person: float | None
+    budget_currency: str = DEFAULT_CURRENCY
     status: str
     expires_at: datetime
     max_participants: int

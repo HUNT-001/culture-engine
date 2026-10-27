@@ -35,6 +35,17 @@ describe('plan persistence', () => {
     expect(loadPlan()).toEqual(plan)
   })
 
+  it('keeps the budget currency, and still loads plans saved before currencies existed', () => {
+    savePlan({ ...samplePlan(), currency: 'GBP' })
+    expect(loadPlan()?.currency).toBe('GBP')
+    const legacy = samplePlan()
+    localStorage.setItem('common-thread.lastPlan.v2', JSON.stringify(legacy)) // no currency key
+    expect(loadPlan()).toEqual(legacy)
+    expect(loadPlan()?.currency).toBeUndefined() // callers read this as INR
+    localStorage.setItem('common-thread.lastPlan.v2', JSON.stringify({ ...legacy, currency: 5 }))
+    expect(loadPlan()).toBeNull()
+  })
+
   it('returns null when nothing is saved', () => {
     expect(loadPlan()).toBeNull()
   })

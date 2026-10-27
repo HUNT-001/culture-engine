@@ -6,8 +6,11 @@ import { MAX_PARTICIPANTS, MIN_PARTICIPANTS, newParticipantId } from '../lib/pla
 import {
   buildInterestPayload, newRow, rowsFromSaved, validateInterestRows, type InterestRow,
 } from '../lib/interests'
+import { budgetFields, currencySymbol, DEFAULT_CURRENCY } from '../lib/currency'
+import { useBudgetCurrency } from '../lib/budgetCurrency'
 import { initials } from '../lib/present'
 import { clearPlan, loadPlan, newPlanRef, savePlan, type SavedPlan } from '../lib/storage'
+import CurrencySelect from './CurrencySelect'
 import InterestPicker from './InterestPicker'
 import ResultsPanel from './ResultsPanel'
 import Stepper from './Stepper'
@@ -27,6 +30,7 @@ type Props = { onMode: (demo: boolean) => void }
 export default function QuickPlanner({ onMode }: Props) {
   const [location, setLocation] = useState('Chennai, Tamil Nadu, India')
   const [budget, setBudget] = useState('800')
+  const budgetCurrency = useBudgetCurrency(location)
   const [participants, setParticipants] = useState<QuickParticipant[]>(freshGroup)
   const [planRef, setPlanRef] = useState<string>(() => newPlanRef())
   const [result, setResult] = useState<RecommendationResponse | null>(null)
@@ -85,14 +89,14 @@ export default function QuickPlanner({ onMode }: Props) {
       })
       const payload = {
         location: location.trim(),
-        ...(budget.trim() ? { budget_per_person: Number(budget) } : {}),
+        ...budgetFields(budget, budgetCurrency.currency),
         participants: builtParticipants,
       }
       const response = await getRecommendations(payload)
       setResult(response)
       onMode(response.demo_mode)
       const toSave: SavedPlan = {
-        planRef, savedAt: new Date().toISOString(), location, budget,
+        planRef, savedAt: new Date().toISOString(), location, budget, currency: budgetCurrency.currency,
         participants: builtParticipants.map((p) => ({
           participant_id: p.participant_id, display_name: p.display_name,
           interests: p.interests, resolved_interests: p.resolved_interests,
@@ -111,6 +115,7 @@ export default function QuickPlanner({ onMode }: Props) {
   function resumeSaved() {
     if (!savedPlan) return
     setLocation(savedPlan.location); setBudget(savedPlan.budget)
+    budgetCurrency.restore(savedPlan.location, savedPlan.currency ?? DEFAULT_CURRENCY)
     setParticipants(savedPlan.participants.map((p) => ({
       participant_id: p.participant_id || newParticipantId(),
       display_name: p.display_name,
@@ -155,13 +160,15 @@ export default function QuickPlanner({ onMode }: Props) {
           <div className="input-with-icon">
             <MapPin size={17} />
             <input id="q-location" value={location} maxLength={160}
-              onChange={(e) => setLocation(e.target.value)} placeholder="City or neighbourhood" />
+              onChange={(e) => { setLocation(e.target.value); budgetCurrency.onLocationChange(e.target.value) }}
+              placeholder="City or neighbourhood" />
           </div>
           <label className="field-label" htmlFor="q-budget">Budget per person (optional)</label>
           <div className="input-with-icon budget-input">
-            <span className="currency" aria-hidden="true">₹</span>
+            <span className="currency" aria-hidden="true">{currencySymbol(budgetCurrency.currency)}</span>
             <input id="q-budget" type="number" min="1" max="100000" value={budget}
               onChange={(e) => setBudget(e.target.value)} placeholder="800" />
+            <CurrencySelect id="q-currency" value={budgetCurrency.currency} onChange={budgetCurrency.setCurrency} />
           </div>
 
           <div className="section-heading participant-heading">

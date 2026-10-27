@@ -8,6 +8,7 @@ export type ParticipantInput = {
 export type RecommendationRequest = {
   location: string
   budget_per_person?: number
+  budget_currency?: string
   participants: ParticipantInput[]
 }
 
@@ -108,6 +109,7 @@ export type PlanView = {
   plan_id: string
   location: string
   budget_per_person: number | null
+  budget_currency: string
   status: string
   expires_at: string
   max_participants: number

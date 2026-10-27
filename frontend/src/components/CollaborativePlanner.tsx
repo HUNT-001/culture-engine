@@ -12,9 +12,12 @@ import {
   buildInterestPayload, newRow, rowsFromSaved, unconfirmedSavedInterests, validateInterestRows,
   type InterestRow,
 } from '../lib/interests'
+import { budgetFields, currencySymbol, DEFAULT_CURRENCY, formatMoney } from '../lib/currency'
+import { useBudgetCurrency } from '../lib/budgetCurrency'
 import { initials } from '../lib/present'
 import { clearSession, loadSession, saveSession, type DeviceSession } from '../lib/session'
 import { cleanCode, formatInviteText, hoursUntil, validateJoinInput } from '../lib/invite'
+import CurrencySelect from './CurrencySelect'
 import InterestPicker from './InterestPicker'
 import ResultsPanel from './ResultsPanel'
 import Stepper from './Stepper'
@@ -81,6 +84,7 @@ export default function CollaborativePlanner({ onMode }: Props) {
   // Create form
   const [location, setLocation] = useState('Chennai, Tamil Nadu, India')
   const [budget, setBudget] = useState('')
+  const budgetCurrency = useBudgetCurrency(location)
   // Join form
   const [joinPlanId, setJoinPlanId] = useState('')
   const [joinToken, setJoinToken] = useState('')
@@ -139,9 +143,7 @@ export default function CollaborativePlanner({ onMode }: Props) {
     if (errs.length) { setFieldErrors(errs); return }
     setBusy(true)
     try {
-      const body: { location: string; budget_per_person?: number } = { location: location.trim() }
-      if (budget.trim()) body.budget_per_person = Number(budget)
-      const created = await createPlan(body)
+      const created = await createPlan({ location: location.trim(), ...budgetFields(budget, budgetCurrency.currency) })
       const next: DeviceSession = { planId: created.plan_id, shareToken: created.share_token }
       persist(next)
       await refreshPlan(next)
@@ -308,13 +310,15 @@ export default function CollaborativePlanner({ onMode }: Props) {
                 <div className="input-with-icon">
                   <MapPin size={17} />
                   <input id="c-location" value={location} maxLength={160}
-                    onChange={(e) => setLocation(e.target.value)} placeholder="City or neighbourhood" />
+                    onChange={(e) => { setLocation(e.target.value); budgetCurrency.onLocationChange(e.target.value) }}
+                    placeholder="City or neighbourhood" />
                 </div>
                 <label className="field-label" htmlFor="c-budget">Budget per person (optional)</label>
                 <div className="input-with-icon budget-input">
-                  <span className="currency" aria-hidden="true">₹</span>
+                  <span className="currency" aria-hidden="true">{currencySymbol(budgetCurrency.currency)}</span>
                   <input id="c-budget" type="number" min="1" max="100000" value={budget}
                     onChange={(e) => setBudget(e.target.value)} placeholder="e.g. 800" />
+                  <CurrencySelect id="c-currency" value={budgetCurrency.currency} onChange={budgetCurrency.setCurrency} />
                 </div>
                 {fieldErrors.length > 0 && (
                   <ul className="validation-errors" role="alert">{fieldErrors.map((m) => <li key={m}>{m}</li>)}</ul>
@@ -382,6 +386,11 @@ export default function CollaborativePlanner({ onMode }: Props) {
             <>
               <div className="plan-facts">
                 <span className="fact"><MapPin size={13} /> {plan.location}</span>
+                {plan.budget_per_person != null && (
+                  <span className="fact">
+                    Budget: {formatMoney(plan.budget_per_person, plan.budget_currency ?? DEFAULT_CURRENCY)} per person
+                  </span>
+                )}
                 <span className="fact">Status: {plan.status}</span>
                 {hoursLeft !== null && <span className="fact">Expires in ~{hoursLeft}h</span>}
               </div>

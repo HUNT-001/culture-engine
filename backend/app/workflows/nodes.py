@@ -169,7 +169,8 @@ def build_nodes(deps: WorkflowDependencies):
         request = RecommendationRequest.model_validate(state["_validated_request"])
         if request.budget_per_person is not None:
             warnings.append(
-                "Budget was recorded but venue prices are not available from the current data source, "
+                f"Budget was recorded ({request.budget_per_person:g} {request.budget_currency}) "
+                "but venue prices are not available from the current data source, "
                 "so it has not been checked."
             )
         represented = {pid for option in options for pid in option.candidate.participant_ranks}

@@ -1,6 +1,7 @@
 // Pure, framework-free helpers for building and validating a group plan.
 // Kept separate from React so they can be unit-tested without a DOM.
 import type { RecommendationRequest } from '../types'
+import { budgetFields, DEFAULT_CURRENCY } from './currency'
 
 export type DraftParticipant = {
   participant_id: string
@@ -86,20 +87,17 @@ export function buildPayload(
   location: string,
   budget: string,
   participants: DraftParticipant[],
+  currency: string = DEFAULT_CURRENCY,
 ): RecommendationRequest {
-  const payload: RecommendationRequest = {
+  return {
     location: location.trim(),
+    ...budgetFields(budget, currency),
     participants: participants.map((person) => ({
       participant_id: person.participant_id,
       display_name: person.display_name.trim(),
       interests: normalizeInterests(person.interestsText),
     })),
   }
-  const value = Number(budget)
-  if (budget.trim() && Number.isFinite(value) && value > 0) {
-    payload.budget_per_person = value
-  }
-  return payload
 }
 
 let counter = 0

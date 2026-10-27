@@ -5,6 +5,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 from app.core.security import hash_token, new_token, token_matches
 from app.db.models import ParticipantModel, PlanModel, PreferenceModel, RecommendationRunModel
+from app.domain.currency import DEFAULT_CURRENCY
 from app.services.resolution import confirmed_index, normalize_name
 
 
@@ -37,12 +38,14 @@ def purge_expired_plans(db: Session, now: datetime | None = None, limit: int = 1
 
 
 def create_plan(
-    db: Session, location: str, budget_per_person: float | None, ttl_hours: int
+    db: Session, location: str, budget_per_person: float | None, ttl_hours: int,
+    budget_currency: str = DEFAULT_CURRENCY,
 ) -> tuple[PlanModel, str]:
     token = new_token()
     plan = PlanModel(
         location=location,
         budget_per_person=budget_per_person,
+        budget_currency=budget_currency,
         share_token_hash=hash_token(token),
         expires_at=utc_now() + timedelta(hours=ttl_hours),
     )
