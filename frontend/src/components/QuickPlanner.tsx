@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, Compass, LoaderCircle, MapPin, Plus, RotateCcw, Users, X } from 'lucide-react'
+import { ArrowUpRight, LoaderCircle, MapPin, Plus, RotateCcw, ShieldCheck, X } from 'lucide-react'
 import { getRecommendations } from '../api/client'
 import type { RecommendationResponse } from '../types'
 import { MAX_PARTICIPANTS, MIN_PARTICIPANTS, newParticipantId } from '../lib/plan'
 import {
   buildInterestPayload, newRow, rowsFromSaved, validateInterestRows, type InterestRow,
 } from '../lib/interests'
+import { initials } from '../lib/present'
 import { clearPlan, loadPlan, newPlanRef, savePlan, type SavedPlan } from '../lib/storage'
 import InterestPicker from './InterestPicker'
 import ResultsPanel from './ResultsPanel'
+import Stepper from './Stepper'
+import ThreadArt from './ThreadArt'
 
 type QuickParticipant = { participant_id: string; display_name: string; rows: InterestRow[] }
 
@@ -120,15 +123,22 @@ export default function QuickPlanner({ onMode }: Props) {
 
   const showResumeBar = savedPlan && savedPlan.result && savedPlan.planRef !== planRef && !result
 
+  // Progress is derived from existing state only: nothing here changes behaviour.
+  const groupReady = participants.every((p) => p.display_name.trim() && validateInterestRows(p.rows).length === 0)
+  const step = result ? 4 : groupReady ? 3 : 2
+
   return (
     <>
+      <Stepper label="Quick planner progress" current={step}
+        steps={['Set the scene', 'Build the group', 'Confirm interests', 'Your results']} />
+
       {showResumeBar && (
-        <div className="resume-bar" role="status">
-          <span>
-            <RotateCcw size={14} /> Saved plan <strong>{savedPlan!.planRef}</strong> from{' '}
-            {new Date(savedPlan!.savedAt).toLocaleString()} is on this device.
-          </span>
-          <span className="resume-actions">
+        <div className="notice notice-info" role="status">
+          <RotateCcw size={16} />
+          <p>
+            Saved plan <strong>{savedPlan!.planRef}</strong> from {new Date(savedPlan!.savedAt).toLocaleString()} is on this device.
+          </p>
+          <span className="notice-actions">
             <button type="button" className="text-button" onClick={resumeSaved}>Resume</button>
             <button type="button" className="text-button muted" onClick={discardSaved}>Discard</button>
           </span>
@@ -136,7 +146,7 @@ export default function QuickPlanner({ onMode }: Props) {
       )}
 
       <section className="workspace">
-        <form className="planner-card" onSubmit={submit} noValidate>
+        <form className="card planner-card" onSubmit={submit} noValidate>
           <div className="section-heading">
             <div><span className="step">01</span><h2>Set the scene</h2></div>
             <span className="small-muted">Plan {planRef}</span>
@@ -149,7 +159,7 @@ export default function QuickPlanner({ onMode }: Props) {
           </div>
           <label className="field-label" htmlFor="q-budget">Budget per person (optional)</label>
           <div className="input-with-icon budget-input">
-            <span className="currency">₹</span>
+            <span className="currency" aria-hidden="true">₹</span>
             <input id="q-budget" type="number" min="1" max="100000" value={budget}
               onChange={(e) => setBudget(e.target.value)} placeholder="800" />
           </div>
@@ -166,23 +176,26 @@ export default function QuickPlanner({ onMode }: Props) {
             {participants.map((person, index) => (
               <div className="participant" key={person.participant_id}>
                 <div className="participant-top">
+                  <span className="avatar" data-tone={index % 4} aria-hidden="true">{initials(person.display_name)}</span>
                   <label className="field-label" htmlFor={`q-name-${index}`}>Participant {index + 1}</label>
                   {participantCount > MIN_PARTICIPANTS && (
                     <button className="icon-button" type="button" aria-label={`Remove participant ${index + 1}`}
                       onClick={() => removeParticipant(index)}><X size={15} /></button>
                   )}
                 </div>
-                <input id={`q-name-${index}`} className="plain-input" value={person.display_name} maxLength={60}
+                <input id={`q-name-${index}`} className="input" value={person.display_name} maxLength={60}
                   onChange={(e) => updateParticipant(index, { display_name: e.target.value })}
                   placeholder="Name or nickname" />
-                <label className="field-label interests-label">Interests</label>
-                <InterestPicker idPrefix={`q-${index}`} rows={person.rows}
-                  onChange={(rows) => updateParticipant(index, { rows })} />
+                <div className="field-label interests-label" id={`q-interests-${index}`}>Interests</div>
+                <div role="group" aria-labelledby={`q-interests-${index}`}>
+                  <InterestPicker idPrefix={`q-${index}`} rows={person.rows}
+                    onChange={(rows) => updateParticipant(index, { rows })} />
+                </div>
               </div>
             ))}
           </div>
           {participantCount < MAX_PARTICIPANTS && (
-            <button type="button" className="add-person" onClick={addParticipant}>
+            <button type="button" className="add-link" onClick={addParticipant}>
               <Plus size={15} /> Add someone else
             </button>
           )}
@@ -193,36 +206,45 @@ export default function QuickPlanner({ onMode }: Props) {
             </ul>
           )}
 
-          <button className="submit-button" type="submit" disabled={loading}>
+          <button className="btn btn-primary btn-block" type="submit" disabled={loading}>
             {loading
               ? <><LoaderCircle className="spinner" size={17} /> Finding your cultural thread…</>
               : <>Find our shared next thing <ArrowUpRight size={18} /></>}
           </button>
           <p className="privacy-note">
-            <Users size={14} /> No account required. Avoid entering sensitive personal information.
+            <ShieldCheck size={14} /> No account required. Avoid entering sensitive personal information.
           </p>
         </form>
 
-        <aside className="side-panel">
-          {!result && !error && (
+        <aside className="side-panel" aria-live="polite">
+          {loading && (
+            <div className="empty-state is-loading" role="status">
+              <ThreadArt variant="compact" />
+              <span className="eyebrow">Weaving your threads</span>
+              <h3>Looking for where<br />your tastes meet…</h3>
+              <p>Asking Qloo what each person's interests connect to, then comparing the results.</p>
+            </div>
+          )}
+          {!result && !error && !loading && (
             <div className="empty-state">
-              <div className="orbit orbit-one" /><div className="orbit orbit-two" />
-              <div className="empty-icon"><Compass size={34} strokeWidth={1.5} /></div>
-              <span className="empty-eyebrow">THE CULTURAL BRIDGE</span>
+              <ThreadArt variant="compact" />
+              <span className="eyebrow">The cultural bridge</span>
               <h3>What connects<br />your different worlds?</h3>
               <p>We compare everyone's cultural interests to find shared ground, unexpected links and one worthwhile wildcard.</p>
-              <div className="option-legend">
-                <span><i className="legend-dot shared" />Shared Ground — everyone overlaps</span>
-                <span><i className="legend-dot bridge" />Cultural Bridge — several connect</span>
-                <span><i className="legend-dot stretch" />Stretch Choice — one worthwhile wildcard</span>
-              </div>
+              <ul className="option-legend">
+                <li><i className="legend-dot shared" /><span><strong>Shared Ground</strong> everyone overlaps</span></li>
+                <li><i className="legend-dot bridge" /><span><strong>Cultural Bridge</strong> several connect</span></li>
+                <li><i className="legend-dot stretch" /><span><strong>Stretch Choice</strong> one worthwhile wildcard</span></li>
+              </ul>
             </div>
           )}
           {error && (
-            <div className="error-card">
-              <h3>We couldn't finish that plan.</h3>
-              <p>{error}</p>
-              <p className="helper">Fix the issue above and try again. Your inputs are still here.</p>
+            <div className="notice notice-error error-card" role="alert">
+              <div>
+                <h3>We couldn't finish that plan.</h3>
+                <p>{error}</p>
+                <p className="helper">Fix the issue and try again. Your inputs are still here.</p>
+              </div>
             </div>
           )}
           {result && (
