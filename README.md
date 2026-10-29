@@ -21,7 +21,7 @@ A Qloo-powered cultural-discovery app that turns a group's different tastes into
 
 <sub>The real app running in demo mode: pick a planner, search each interest, explicitly confirm the entity you mean, then see where the group's tastes meet.</sub>
 
-[Features](#features) · [How it works](#how-it-works) · [Components](#major-components) · [Run it](#run-it-locally) · [Configuration](#configuration) · [Deploy](#deployment) · [For developers](#for-developers)
+[Features](#features) · [Why Qloo](#why-qloo) · [How it works](#how-it-works) · [Benchmarks](#how-it-measures-up) · [Components](#major-components) · [Run it](#run-it-locally) · [Configuration](#configuration) · [Deploy](#deployment) · [For developers](#for-developers)
 
 </div>
 
@@ -39,6 +39,23 @@ A Qloo-powered cultural-discovery app that turns a group's different tastes into
 - **Thoughtful UI.** Responsive down to 360px, keyboard-accessible with visible focus, skip link and labelled controls, and `prefers-reduced-motion` support.
 
 > Results are discovery signals, not guarantees. Venue hours, prices and availability are never claimed; check before you travel.
+
+---
+
+## Why Qloo
+
+Common Thread is built on Qloo's taste data. Qloo is where the real places, the real entities and the cultural signals come from; the app's own code decides how to *combine* them for a group, but it has nothing to combine without them.
+
+| What Qloo provides | What Common Thread does with it | What is lost without it |
+|---|---|---|
+| **Entity search** (`/search`): a stable id and type for each interest | You pick the exact entity you mean, so "Phoenix" the band is never confused with the city or the actor. | Interests stay free text with no identity. Name matching cannot tell entities apart: our live observation found the same name on entities of different types, and one id under more than one type. |
+| **Taste-to-place recommendations** (`/v2/insights`, from confirmed entity ids plus your location) | Real places near the destination that match each person's tastes, across domains (a band you like can lead to a venue you'd enjoy). | **There are no candidates at all.** The ranker only orders what retrieval returns. Demo mode shows exactly this gap: a small fixed set of fictional "Demo Venue" names, labelled **DEMO**, rotated by a checksum of the inputs. |
+| **One query per person plus one for the group** | Each person's own result list, so coverage ("how many people's results include this place") is real, and *Shared Ground*, *Cultural Bridge* and *Stretch Choice* mean something. | The overlap the whole product is about cannot be computed. |
+| **Affinity and explainability** on each result | Qloo's affinity feeds half of each person's score, and "Qloo linked this to *your interest*" is shown as evidence, only when Qloo supplied it. | Ranking falls back to rank order alone and the evidence disappears. In the offline benchmark, removing only the affinity signal changed the top three picks (Jaccard 0.915 against the full ranker) and made the worst-off person's best rank worse, 1.522 to 1.652 (synthetic fixtures; lower is better). |
+
+An LLM could name plausible places, but nothing could then show where a pick came from, and it could invent venues. Common Thread's evidence layer shows only what Qloo returned, and the optional LLM may only reword the explanations. We have **not** measured an LLM-only version (that baseline is still pending in the benchmark), so the case for Qloo here is structural rather than a measured win: real entities, real candidates, per-person results and traceable evidence.
+
+Without a Qloo key the app still runs in demo mode with synthetic data. That is useful for trying the interface, not for real recommendations.
 
 ---
 
@@ -164,6 +181,29 @@ sequenceDiagram
 ```
 
 Tokens travel only in headers, never in URLs; the server stores only their hashes.
+
+---
+
+## How it measures up
+
+[CommonThreadBench v2](docs/COMMON_THREAD_BENCHMARK_RESULTS.md) runs the real adapter, workflow and routes against Qloo-shaped mock HTTP on 48 synthetic scenarios (16 development, 32 held-out; 47 of them produced a retrievable pool). It compares the full Common Thread workflow with a **group-blind popularity baseline** that ranks the same pool by a fixture-supplied popularity score and ignores who is in the group.
+
+| Whole group, end to end (47 scenarios) | Common Thread | Popularity baseline |
+|---|---|---|
+| Mean share of the group each pick covers | **0.989** | 0.970 |
+| Scenarios where every servable person is served | **46/47 (97.9%)** | 43/47 (91.5%) |
+| Worst-off person's best rank (lower is better) | **1.609** | 2.395 |
+
+On the 32 held-out scenarios (nothing was tuned on them) the ranker serves everyone in 31/32 (96.9%) against 28/32 (87.5%) for popularity.
+
+Behaviours verified offline, each tagged `mocked-integration` or `production-function` in the full report:
+
+- **No silent matching.** 0 of 11 false automatic confirmations, because the server binds only entities you explicitly confirmed. This is a policy result, not an accuracy score.
+- **Dislikes are honoured.** Exact venue-name dislikes (including case variants) excluded the venue in 47/47 scenarios, and the exclusion was disclosed each time.
+- **Every claim is traceable.** 704/704 displayed claims are supported by the data the provider returned, with 0 internal identifiers leaked into user-visible text.
+- **Failures are contained.** All 33 injected Qloo fault cases (timeouts, 401/403/429/5xx, malformed bodies) met the documented API contract, with no raw provider bodies, secrets or stack traces in any response.
+
+> **Read these as structural measures, not quality.** Fixtures are synthetic and Qloo is mocked, so this shows the workflow behaves as designed, not that people prefer its picks. Other rankers beat it on single columns (rank aggregation optimises the worst-off person's rank by construction). The LLM-only baseline and the human study are still **pending**, and no live-Qloo accuracy figure exists. Earlier v1 figures came from a stale revision and are withdrawn (`docs/benchmark-history/`). Regenerate everything with `python -m bench.run_benchmark` from `backend/`.
 
 ---
 
